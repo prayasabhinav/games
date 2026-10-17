@@ -14,6 +14,7 @@ I first published them in 2022 under another GitHub account of mine, which I can
 | File | What it is |
 |---|---|
 | [`3-quarters-rules.md`](3-quarters/3-quarters-rules.md) | The rules |
+| [`3-quarters-rules-clarified.md`](3-quarters/3-quarters-rules-clarified.md) | The rules with the points the first version left open settled, October 2026 |
 | [`3-quarters-about.md`](3-quarters/3-quarters-about.md) | What the game is for |
 | [`3-quarters-board.pdf`](3-quarters/3-quarters-board.pdf) | The board, to print |
 | [`3-quarters-pieces.pdf`](3-quarters/3-quarters-pieces.pdf) | The pieces for four players, to print and cut out |
