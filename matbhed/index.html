@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matbhed | મતભેદ | मतभेद</title>
+<meta name="description" content="A board game about Article 25 of the Constitution of India, the freedom of religion, by Prayas Abhinav and Jaskaran Singh. Board and 53 cards in English and Gujarati, free to print under CC BY 4.0.">
+<meta property="og:title" content="Matbhed | મતભેદ | मतभेद">
+<meta property="og:description" content="A board game about Article 25, the freedom of religion. Free to print, CC BY 4.0.">
+<meta property="og:image" content="https://prayasabhinav.github.io/games/matbhed/page/board.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mukta+Vaani:wght@200;300;500&family=Rasa:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ground: #08122a;
+  --ground-deep: #050b1c;
+  --cobalt: #1848c0;
+  --cobalt-soft: #2070a0;
+  --vermilion: #d84830;
+  --red: #b00000;
+  --gold: #d8b020;
+  --sheet: #f8f4ec;
+  --ink: #1a1410;
+  --card-red: #f89f8a;
+  --card-yellow: #f2f69d;
+  --card-green: #a8de8f;
+  --thin: "Mukta Vaani", "Noto Sans Gujarati", sans-serif;
+  --serif: "Rasa", "Noto Serif Gujarati", serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--ground-deep); }
+body {
+  margin: 0;
+  color: var(--sheet);
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  line-height: 1.6;
+  background:
+    radial-gradient(60% 45% at 78% 18%, rgba(216, 72, 48, .55), transparent 70%),
+    radial-gradient(55% 50% at 12% 62%, rgba(24, 72, 192, .55), transparent 72%),
+    radial-gradient(40% 35% at 70% 88%, rgba(216, 176, 32, .22), transparent 70%),
+    radial-gradient(80% 60% at 40% 40%, rgba(32, 112, 160, .25), transparent 75%),
+    var(--ground);
+  overflow-x: hidden;
+}
+/* a slow wash drifting under everything */
+body::before {
+  content: "";
+  position: fixed; inset: -20%;
+  background:
+    radial-gradient(30% 25% at 30% 30%, rgba(24, 72, 192, .35), transparent 70%),
+    radial-gradient(25% 30% at 70% 60%, rgba(176, 0, 0, .28), transparent 70%);
+  filter: blur(40px);
+  animation: drift 38s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes drift { to { transform: translate(6%, -4%) rotate(8deg); } }
+@media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
+
+main { position: relative; z-index: 1; }
+
+/* the sticker: a die-cut edge, a shadow, a tilt */
+.sticker {
+  position: absolute;
+  display: block;
+  background: #fff;
+  padding: 7px;
+  border-radius: 14px;
+  box-shadow: 0 2px 0 rgba(0,0,0,.18), 0 14px 28px rgba(0, 0, 0, .45);
+  transform: rotate(var(--r, 0deg));
+  transition: transform .6s cubic-bezier(.2, .7, .2, 1);
+}
+.sticker:hover { transform: rotate(calc(var(--r, 0deg) * .3)) scale(1.04); z-index: 5; }
+.sticker img { display: block; width: 100%; height: auto; border-radius: 8px; }
+.label {
+  position: absolute;
+  font-family: var(--thin);
+  font-weight: 500;
+  font-size: 1.05rem;
+  line-height: 1.15;
+  padding: .55em 1em .5em;
+  border-radius: 999px;
+  border: 5px solid #fff;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .4);
+  transform: rotate(var(--r, 0deg));
+  white-space: nowrap;
+  color: var(--ink);
+}
+.token {
+  position: absolute;
+  width: 74px; height: 74px;
+  border-radius: 50%;
+  background: #231f20;
+  color: #fff;
+  border: 6px solid #fff;
+  display: grid; place-items: center;
+  font-family: var(--serif);
+  font-size: 1.9rem;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .45);
+  transform: rotate(var(--r, 0deg));
+}
+
+/* first screen: the table top */
+.table {
+  position: relative;
+  height: clamp(860px, 100vh, 1040px);
+  max-width: 1560px;
+  margin: 0 auto;
+}
+.title {
+  position: absolute;
+  left: 4%; top: 8%;
+  z-index: 3;
+  max-width: 34rem;
+}
+.title h1 {
+  margin: 0;
+  font-family: var(--thin);
+  font-weight: 200;
+  font-size: clamp(3.6rem, 8.5vw, 8.5rem);
+  line-height: .95;
+  letter-spacing: -.01em;
+}
+.title h1 span { display: block; font-size: .5em; font-weight: 300; color: var(--gold); margin-top: .35em; letter-spacing: .02em; }
+.title p {
+  margin: 1.6rem 0 0;
+  font-size: 1.3rem;
+  max-width: 24rem;
+  color: rgba(248, 244, 236, .88);
+}
+.board { width: min(42vw, 620px); left: 45%; top: 12%; --r: 4deg; padding: 10px; border-radius: 18px; z-index: 2; }
+.c1 { width: 150px; left: 5%;  top: 60%; --r: -9deg; }
+.c2 { width: 150px; left: 16%; top: 66%; --r: 6deg; }
+.c3 { width: 140px; left: 28%; top: 57%; --r: -4deg; }
+.c4 { width: 150px; left: 86%; top: 56%; --r: 11deg; z-index: 3; }
+.c5 { width: 130px; left: 40%; top: 7%;  --r: -14deg; z-index: 3; }
+.c6 { width: 140px; left: 84%; top: 8%;  --r: 9deg; z-index: 3; }
+.c7 { width: 130px; left: 38%; top: 66%; --r: 12deg; z-index: 3; }
+.c8 { width: 140px; left: 70%; top: 70%; --r: -7deg; z-index: 3; }
+.l1 { left: 30%; top: 50%; --r: -6deg; background: var(--gold); }
+.l2 { left: 74%; top: 5%;  --r: 7deg;  background: var(--card-green); }
+.l3 { left: 50%; top: 86%; --r: -3deg; background: var(--card-yellow); }
+.l4 { left: 6%;  top: 90%; --r: 4deg;  background: var(--vermilion); color: #fff; }
+.l5 { left: 82%; top: 88%; --r: -8deg; background: var(--card-red); }
+.l6 { left: 4%;  top: 49%; --r: 3deg;  background: var(--cobalt); color: #fff; }
+.l7 { left: 88%; top: 44%; --r: -12deg; background: var(--sheet); }
+.l8 { left: 22%; top: 92%; --r: -5deg; background: var(--card-green); }
+.l9 { left: 22%; top: 2%;  --r: -4deg; background: var(--red); color: #fff; }
+.t1 { left: 26%; top: 82%; --r: -10deg; }
+.t2 { left: 31%; top: 85%; --r: 14deg; }
+.t3 { left: 92%; top: 30%; --r: 5deg; }
+.die {
+  position: absolute; left: 61%; top: 74%;
+  width: 70px; height: 70px;
+  background: #fff; border-radius: 14px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.45);
+  transform: rotate(-16deg);
+  display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 12px; gap: 2px;
+}
+.die i { width: 11px; height: 11px; border-radius: 50%; background: var(--red); place-self: center; }
+.die i:nth-child(1) { grid-area: 1 / 1; } .die i:nth-child(2) { grid-area: 2 / 2; } .die i:nth-child(3) { grid-area: 3 / 3; }
+.die i:nth-child(4) { grid-area: 1 / 3; } .die i:nth-child(5) { grid-area: 3 / 1; }
+
+/* the sheet: rules and files */
+.sheet {
+  position: relative;
+  max-width: 50rem;
+  margin: 18vh auto 0;
+  background: var(--sheet);
+  color: var(--ink);
+  border-radius: 6px;
+  padding: 80px 76px 88px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .55);
+}
+.sheet h2 {
+  font-family: var(--thin);
+  font-weight: 300;
+  font-size: 2.6rem;
+  line-height: 1.1;
+  margin: 0 0 32px;
+  color: var(--cobalt);
+}
+.sheet h2 + p { margin-top: 0; }
+.sheet section + section { margin-top: 72px; }
+.sheet p { margin: 0 0 24px; }
+.sheet strong { font-family: var(--thin); font-weight: 500; font-size: 1.05em; }
+.sheet .sticker-in {
+  position: absolute;
+  right: -46px; top: -40px;
+  width: 150px;
+}
+.sheet .side { position: absolute; }
+.sheet .s-left { left: -96px; top: 34%; width: 140px; }
+.sheet .s-label { right: -64px; top: 58%; }
+.sheet .s-token { left: -40px; top: 72%; }
+.facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 28px;
+  margin: 0 0 40px;
+  padding: 0;
+}
+.facts dt { font-family: var(--thin); font-weight: 500; color: var(--red); }
+.facts dd { margin: 0; }
+.files { list-style: none; margin: 0; padding: 0; }
+.files li {
+  display: grid;
+  grid-template-columns: 1.1rem 1fr;
+  gap: 18px;
+  padding: 22px 0;
+  border-top: 1px solid rgba(26, 20, 16, .12);
+}
+.files li::before {
+  content: "";
+  width: 1.1rem; height: 1.1rem;
+  border-radius: 50%;
+  margin-top: .35rem;
+  background: var(--dot, var(--cobalt));
+}
+.files a {
+  font-family: var(--thin);
+  font-weight: 500;
+  font-size: 1.25rem;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 3px solid var(--dot, var(--cobalt));
+}
+.files a:hover { color: var(--red); }
+.files span { display: block; margin-top: 6px; color: rgba(26, 20, 16, .72); font-size: 1.05rem; }
+.credit {
+  max-width: 50rem;
+  margin: 0 auto;
+  padding: 72px 76px 120px;
+  color: rgba(248, 244, 236, .82);
+  font-size: 1.05rem;
+}
+.credit a { color: var(--gold); }
+
+@media (max-width: 900px) {
+  .table { min-height: auto; padding: 48px 20px 40px; display: flex; flex-direction: column; gap: 36px; }
+  .table { height: auto; }
+  .title, .sticker, .label, .token, .die { position: relative; left: auto; top: auto; }
+  .tags { display: flex; flex-wrap: wrap; gap: 18px 14px; justify-content: center; }
+  .title { max-width: none; }
+  .board { width: 90%; align-self: center; }
+  .strip { display: flex; flex-wrap: wrap; gap: 22px; align-items: center; justify-content: center; }
+  .strip .sticker { width: 40%; max-width: 180px; }
+  .c5, .c6, .c7, .c8 { display: none; }
+  .sheet { margin: 40px 16px 0; padding: 56px 28px 64px; }
+  .sheet .sticker-in { width: 100px; right: 8px; top: -64px; }
+  .sheet .side { display: none; }
+  .credit { padding: 56px 28px 96px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <div class="table">
+    <div class="title">
+      <h1>Matbhed<span>મતભેદ · मतभेद</span></h1>
+      <p>A board game about Article 25 of the Constitution of India, the freedom of religion. Free to print and change.</p>
+    </div>
+
+    <a class="sticker board" href="matbhed-board.pdf" title="The board, 18 × 18 inches"><img src="page/board.jpg" alt="The Matbhed board: a square maze with red, yellow and green boxes, its name in Gujarati, Hindi and English on four sides" width="1400" height="1400"></a>
+
+    <div class="strip">
+      <a class="sticker c1" href="cards/matbhed-cards-english.pdf"><img src="page/red-en-9.jpg" alt="Red card 9: A boy is stopped from buying a coconut for his religious prayers, can he claim protection under Article 25 of the Constitution?" width="440" height="616" loading="lazy"></a>
+      <a class="sticker c2" href="cards/matbhed-cards-gujarati.pdf"><img src="page/yellow-gu-1.jpg" alt="Yellow card 1, in Gujarati" width="440" height="616" loading="lazy"></a>
+      <a class="sticker c3" href="cards/matbhed-cards-english.pdf"><img src="page/green-en-6.jpg" alt="Green card 6: In a Court Room, a lawyer argued, Freedom of religion does not cover non-religious people. Can you think of a counterargument? Hint: Read Article 25." width="440" height="616" loading="lazy"></a>
+      <a class="sticker c4" href="cards/matbhed-cards-english.pdf"><img src="page/red-en-17.jpg" alt="Red card 17: Has religion done more harm than good?" width="440" height="616" loading="lazy"></a>
+      <a class="sticker c5" href="cards/matbhed-cards-gujarati.pdf"><img src="page/red-gu-6.jpg" alt="Red card 6, in Gujarati" width="440" height="616" loading="lazy"></a>
+      <a class="sticker c6" href="cards/matbhed-cards-gujarati.pdf"><img src="page/green-gu-9.jpg" alt="Green card 9, in Gujarati" width="440" height="616" loading="lazy"></a>
+      <a class="sticker c7" href="cards/matbhed-cards-english.pdf"><img src="page/red-en-1.jpg" alt="Red card 1: God appeared in your dreams, and asked you to demolish a temple of a different religion. Can you demolish the temple as per your rights under Article 25 of the Constitution?" width="440" height="616" loading="lazy"></a>
+      <a class="sticker c8" href="cards/matbhed-cards-english.pdf"><img src="page/yellow-en-12.jpg" alt="Yellow card 12, on a man who preaches that working women must be stoned, asking whether Article 25 protects him" width="440" height="616" loading="lazy"></a>
+    </div>
+
+    <div class="tags">
+    <span class="label l1">Article 25</span>
+    <span class="label l2">2 to 16 players</span>
+    <span class="label l3">53 cards · English · ગુજરાતી</span>
+    <span class="label l4">CC BY 4.0</span>
+    <span class="label l5">a Judge scores 1 to 7</span>
+    <span class="token t1">1</span>
+    <span class="token t2">2</span>
+    <span class="token t3">3</span>
+    <span class="label l6">a maze, one die</span>
+    <span class="label l7">Conflictorium · Ahmedabad · 2023</span>
+    <span class="label l8">ages 15 and over</span>
+    <span class="label l9">Prayas Abhinav &amp; Jaskaran Singh</span>
+    <span class="die" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+    </div>
+  </div>
+
+  <article class="sheet">
+    <a class="sticker sticker-in" href="cards/matbhed-cards-english.pdf" style="--r: 8deg"><img src="page/yellow-en-3.jpg" alt="Yellow card 3: At a Free Speech Conference, a woman burned a holy book to demonstrate the freedom of expression in the country. A criminal complaint was filed against the woman. Roll the dice again; on an even number you are her defence lawyer, on an odd number the prosecution counsel." width="440" height="616" loading="lazy"></a>
+
+    <a class="sticker side s-left" href="cards/matbhed-cards-english.pdf" style="--r: -8deg"><img src="page/green-en-11.jpg" alt="Green card 11, on a young man murdered by the family of the girl who loved him, asking what lay behind it and how such killings can be prevented" width="440" height="616" loading="lazy"></a>
+    <span class="label side s-label" style="--r: 9deg; background: var(--gold)">print · cut · play</span>
+    <span class="token side s-token" style="--r: -6deg">1</span>
+
+    <section>
+      <h2>How to play</h2>
+      <dl class="facts">
+        <dt>Players</dt><dd>2 to 16</dd>
+        <dt>Points to exit</dt><dd>25 by default, up to 100</dd>
+        <dt>Age</dt><dd>15 and over</dd>
+        <dt>You need</dt><dd>the board, the cards, three objection tokens each, a six-sided die and a counter for each player</dd>
+      </dl>
+      <p>The board is a maze. You win by sharing what you know and by discussion: find the exit and escape with the points you need.</p>
+      <p><strong>Moving.</strong> Roll the die to move. When you land on a coloured box, take a card of the matching colour, read it out and give your response. You can move in any direction, but you cannot change direction during a turn unless a wall is in front of you.</p>
+      <p><strong>Points.</strong> A Judge scores each answer from 1 to 7. The Judge can be one person or a group, and all the players can act as the Judge together. Every answer earns at least 1 point; you earn more by convincing the Judge with your legal thoroughness and awareness.</p>
+      <p><strong>Objections.</strong> Any player can object to another player's response, and with a valid objection or a better answer can take that player's points. If the objection is not valid, or the new answer is not suitable, the objector loses points. The Judge decides.</p>
+      <p><strong>Winning.</strong> The game ends when every player has left the maze. The player who gains the points needed to exit, and then reaches the exit, wins.</p>
+    </section>
+
+    <section>
+      <h2>Print it</h2>
+      <ul class="files">
+        <li style="--dot: var(--ink)"><div><a href="matbhed-board.pdf">The board</a><span>PDF, 18 × 18 inches; it was first printed on canvas</span></div></li>
+        <li style="--dot: var(--card-red)"><div><a href="cards/matbhed-cards-english.pdf">The cards in English</a><span>PDF, 53 cards, one to a page, 2.5 × 3.5 inches: 20 red, 20 yellow, 13 green</span></div></li>
+        <li style="--dot: var(--card-green)"><div><a href="cards/matbhed-cards-gujarati.pdf">The cards in Gujarati</a><span>PDF, the same 53 cards</span></div></li>
+        <li style="--dot: #231f20"><div><a href="cards/matbhed-objection-tokens.pdf">Objection tokens</a><span>PDF on A4, to cut out</span></div></li>
+        <li style="--dot: var(--gold)"><div><a href="https://github.com/prayasabhinav/games/tree/main/matbhed/cards">The card texts and the file that builds them</a><span>Plain text, one card to a paragraph, for changing the cards or adding a language</span></div></li>
+      </ul>
+    </section>
+  </article>
+
+  <p class="credit">Designed by Prayas Abhinav and Jaskaran Singh in 2023 for Conflictorium's Re-Art25 project, Ahmedabad. Under <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0</a>: print it, translate it, change it, and name the two of us. Source on <a href="https://github.com/prayasabhinav/games/tree/main/matbhed">GitHub</a>.</p>
+</main>
+</body>
+</html>

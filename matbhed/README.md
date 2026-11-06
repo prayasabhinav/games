@@ -4,6 +4,8 @@ A board game about Article 25 of the Constitution of India, the freedom of relig
 
 ![The Matbhed board](matbhed-board.jpg)
 
+The game's page: https://prayasabhinav.github.io/games/matbhed/
+
 ## Files
 
 | File | What it is |
