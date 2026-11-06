@@ -6,7 +6,7 @@ Games I designed, with their rules and the files to print and play them.
 - **All or Nothing** (2020): a card game for 2 to 4 players about completing a 12-slice pizza. Players add and take away slices with number cards, and whoever completes the pizza scores a point for every card in the centre.
 - **Matbhed** (2023): a board game I designed with Jaskaran Singh for Conflictorium's Re-Art25 project, about Article 25 of the Constitution of India, the freedom of religion. Players cross a maze and answer cards on religion and the law, printed in English and Gujarati, and a Judge scores each answer. Its files and rules are in [`matbhed/`](matbhed/README.md).
 
-3 Quarters and All or Nothing are among the known games in boardgameBuilder, at https://boardgame.blevn.xyz, where each can be downloaded as a design and opened to change.
+3 Quarters and All or Nothing are among the known games in boardgameBuilder, at [boardgame.syntax.prayasabhinav.net](https://boardgame.syntax.prayasabhinav.net), where each can be downloaded as a design and opened to change.
 
 I first published those two in 2022 under another GitHub account of mine, which I can no longer sign in to. This repository is their home now. The texts are as I wrote them then; only their links to images and print files now point to the copies here.
 
