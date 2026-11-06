@@ -12,6 +12,8 @@ I first published those two in 2022 under another GitHub account of mine, which 
 
 ## 3 Quarters
 
+The game's page: https://prayasabhinav.github.io/games/3-quarters/
+
 | File | What it is |
 |---|---|
 | [`3-quarters-rules.md`](3-quarters/3-quarters-rules.md) | The rules |

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3 Quarters</title>
+<meta name="description" content="3 Quarters, a board game by Prayas Abhinav, made in 2022 as a warm-up for students: complete three-quarter circles with quarter-circle pieces. Board, pieces and rules free to print under CC BY 4.0.">
+<meta property="og:title" content="3 Quarters">
+<meta property="og:description" content="A warm-up board game of quarter circles. Free to print, CC BY 4.0.">
+<meta property="og:image" content="https://prayasabhinav.github.io/games/3-quarters/page/board.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky: #78bcc6;
+  --sky-deep: #3f8e9c;
+  --navy: #1d4a85;
+  --red: #c8462e;
+  --green: #2a6a3a;
+  --blue: #1a4a80;
+  --yellow: #e2cc48;
+  --sheet: #fbf9f4;
+  --ink: #151515;
+  --sans: "Josefin Sans", "Helvetica Neue", Arial, sans-serif;
+  --serif: "Source Serif 4", Georgia, serif;
+}
+* { box-sizing: border-box; }
+html { background: var(--sky-deep); }
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  line-height: 1.6;
+  background:
+    radial-gradient(45% 35% at 20% 25%, rgba(255, 255, 255, .45), transparent 70%),
+    radial-gradient(40% 40% at 80% 70%, rgba(255, 255, 255, .35), transparent 70%),
+    radial-gradient(70% 60% at 50% 100%, rgba(29, 74, 133, .35), transparent 75%),
+    var(--sky);
+  overflow-x: hidden;
+}
+main { position: relative; }
+
+.sticker {
+  position: absolute;
+  display: block;
+  background: #fff;
+  padding: 8px;
+  border-radius: 14px;
+  box-shadow: 0 2px 0 rgba(0,0,0,.12), 0 14px 28px rgba(16, 40, 60, .35);
+  transform: rotate(var(--r, 0deg));
+  transition: transform .5s cubic-bezier(.2, .7, .2, 1);
+}
+.sticker:hover { transform: rotate(calc(var(--r, 0deg) * .3)) scale(1.04); z-index: 5; }
+.sticker img { display: block; width: 100%; height: auto; border-radius: 6px; }
+.label {
+  position: absolute;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: .02em;
+  padding: .6em 1.1em .45em;
+  border-radius: 999px;
+  border: 5px solid #fff;
+  box-shadow: 0 10px 22px rgba(16, 40, 60, .3);
+  transform: rotate(var(--r, 0deg));
+  white-space: nowrap;
+  color: #fff;
+  text-decoration: none;
+}
+
+/* three pieces facing one corner */
+.circle { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 12px; }
+.circle img { border-radius: 0; }
+.circle .q2 { transform: rotate(90deg); }
+.circle .q3 { transform: rotate(-90deg); }
+
+/* a four-sided die */
+.d4 {
+  position: absolute;
+  width: 84px; height: 74px;
+  background: #fff;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  transform: rotate(var(--r, 0deg));
+  display: grid; place-items: end center;
+  padding-bottom: 10px;
+  font-family: var(--sans); font-weight: 600; font-size: 1.5rem; color: var(--red);
+  filter: drop-shadow(0 8px 10px rgba(16, 40, 60, .3));
+}
+
+.table {
+  position: relative;
+  height: clamp(860px, 100vh, 1040px);
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.title { position: absolute; left: 5%; top: 9%; z-index: 3; max-width: 32rem; }
+.title h1 {
+  margin: 0;
+  display: inline-block;
+  background: var(--navy);
+  color: #f2f0ea;
+  font-family: var(--sans);
+  font-weight: 300;
+  font-size: clamp(2.6rem, 4.6vw, 4.6rem);
+  white-space: nowrap;
+  line-height: 1;
+  letter-spacing: .08em;
+  padding: .22em .4em .08em;
+  text-transform: uppercase;
+}
+.title p { margin: 1.6rem 0 0; font-size: 1.3rem; max-width: 24rem; color: #0f2a40; }
+.board { width: min(22vw, 300px); left: 50%; top: 6%; --r: -4deg; z-index: 2; }
+.three { width: 230px; left: 72%; top: 14%; --r: 7deg; z-index: 3; }
+.p1 { width: 120px; left: 6%;  top: 58%; --r: -8deg; }
+.p2 { width: 120px; left: 17%; top: 64%; --r: 6deg; }
+.p3 { width: 120px; left: 28%; top: 57%; --r: -3deg; }
+.p4 { width: 120px; left: 39%; top: 65%; --r: 10deg; }
+.l1 { left: 70%; top: 56%; --r: -6deg; background: var(--red); }
+.l2 { left: 76%; top: 64%; --r: 5deg;  background: var(--green); }
+.l3 { left: 68%; top: 73%; --r: -3deg; background: var(--blue); }
+.l4 { left: 6%;  top: 86%; --r: 4deg;  background: var(--yellow); color: var(--ink); }
+.l5 { left: 30%; top: 84%; --r: -5deg; background: var(--navy); }
+.l6 { left: 78%; top: 84%; --r: 8deg;  background: #fff; color: var(--ink); border-color: var(--ink); }
+.l7 { left: 6%;  top: 46%; --r: -4deg; background: var(--red); }
+.d4  { left: 52%; top: 80%; --r: 12deg; }
+
+.sheet {
+  position: relative;
+  max-width: 50rem;
+  margin: 14vh auto 0;
+  background: var(--sheet);
+  border-radius: 6px;
+  padding: 80px 76px 88px;
+  box-shadow: 0 30px 80px rgba(16, 40, 60, .35);
+}
+.sheet h2 {
+  font-family: var(--sans);
+  font-weight: 300;
+  font-size: 2.5rem;
+  line-height: 1.1;
+  margin: 0 0 32px;
+  color: var(--navy);
+}
+.sheet section + section { margin-top: 72px; }
+.sheet p { margin: 0 0 22px; }
+.sheet strong { font-family: var(--sans); font-weight: 600; }
+.sheet .sticker-in { position: absolute; right: -46px; top: -44px; width: 130px; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 10px 28px; margin: 0 0 40px; }
+.facts dt { font-family: var(--sans); font-weight: 600; color: var(--red); }
+.facts dd { margin: 0; }
+.files { list-style: none; margin: 0; padding: 0; }
+.files li { display: grid; grid-template-columns: 1.1rem 1fr; gap: 18px; padding: 22px 0; border-top: 1px solid rgba(21, 21, 21, .12); }
+.files li::before { content: ""; width: 1.1rem; height: 1.1rem; border-radius: 0 0 0 100%; margin-top: .35rem; background: var(--dot, var(--navy)); }
+.files a { font-family: var(--sans); font-weight: 600; font-size: 1.2rem; color: var(--ink); text-decoration: none; border-bottom: 3px solid var(--dot, var(--navy)); }
+.files a:hover { color: var(--red); }
+.files span { display: block; margin-top: 6px; color: rgba(21, 21, 21, .7); font-size: 1.02rem; }
+.credit { max-width: 50rem; margin: 0 auto; padding: 72px 76px 120px; color: #0f2a40; font-size: 1.05rem; }
+.credit a { color: var(--navy); font-weight: 600; }
+
+@media (max-width: 900px) {
+  .table { height: auto; padding: 48px 20px 40px; display: flex; flex-direction: column; gap: 32px; }
+  .title, .sticker, .label, .d4 { position: relative; left: auto; top: auto; }
+  .title { max-width: none; }
+  .board { width: 45%; align-self: center; }
+  .three { width: 60%; max-width: 230px; align-self: center; }
+  .strip, .tags { display: flex; flex-wrap: wrap; gap: 18px 14px; justify-content: center; align-items: center; }
+  .strip .sticker { width: 40%; max-width: 140px; }
+  .sheet { margin: 40px 16px 0; padding: 56px 28px 64px; }
+  .sheet .sticker-in { width: 90px; right: 8px; top: -60px; }
+  .credit { padding: 56px 28px 96px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <div class="table">
+    <div class="title">
+      <h1>3 Quarters</h1>
+      <p>A board game of quarter circles, made in 2022 as a warm-up for students. Free to print and change.</p>
+    </div>
+
+    <a class="sticker board" href="3-quarters-board.pdf" title="The board"><img src="page/board.jpg" alt="The 3 Quarters board: 24 squares in 8 rows of 3, four rows red, three green and one blue, three of the squares yellow, on a pale blue sky" width="640" height="1408"></a>
+
+    <a class="sticker three" href="https://github.com/prayasabhinav/games/blob/main/3-quarters/3-quarters-rules-clarified.md" title="Three pieces facing one corner make a three-quarter circle">
+      <span class="circle"><img src="page/piece-4.png" alt="" width="300" height="300"><img class="q2" src="page/piece-4.png" alt="" width="300" height="300"><img class="q3" src="page/piece-4.png" alt="" width="300" height="300"></span>
+    </a>
+
+    <div class="strip">
+      <a class="sticker p1" href="3-quarters-pieces.pdf"><img src="page/piece-1.png" alt="A crosshatched quarter circle, 1 point" width="300" height="300" loading="lazy"></a>
+      <a class="sticker p2" href="3-quarters-pieces.pdf"><img src="page/piece-2.png" alt="A dotted quarter circle, 2 points" width="300" height="300" loading="lazy"></a>
+      <a class="sticker p3" href="3-quarters-pieces.pdf"><img src="page/piece-3.png" alt="A plain white quarter circle, 3 points" width="300" height="300" loading="lazy"></a>
+      <a class="sticker p4" href="3-quarters-pieces.pdf"><img src="page/piece-4.png" alt="A solid black quarter circle, 4 points" width="300" height="300" loading="lazy"></a>
+    </div>
+
+    <div class="tags">
+      <span class="label l7">first to 25 points</span>
+      <span class="label l1">2 players: red rows</span>
+      <span class="label l2">3 players: add green</span>
+      <span class="label l3">4 players: add blue</span>
+      <span class="label l4">yellow doubles the score</span>
+      <span class="label l5">20 seconds a move</span>
+      <a class="label l6" href="https://prayasabhinav.net/design">Prayas Abhinav · 2022</a>
+      <span class="d4" aria-hidden="true">4</span>
+    </div>
+  </div>
+
+  <article class="sheet">
+    <a class="sticker sticker-in" href="3-quarters-pieces.pdf" style="--r: 8deg"><img src="page/piece-2.png" alt="A dotted quarter circle, 2 points" width="300" height="300" loading="lazy"></a>
+
+    <section>
+      <h2>How to play</h2>
+      <dl class="facts">
+        <dt>Players</dt><dd>2 to 4 (the pieces are printed for four)</dd>
+        <dt>To win</dt><dd>25 points</dd>
+        <dt>You need</dt><dd>the board, eight pieces for each player, a four-sided die, a coin, and a phone to time each move</dd>
+      </dl>
+      <p><strong>Set up.</strong> Play on the red rows with 2 players, add the green rows for 3, and the blue row for 4. Each player takes their eight quarter-circle pieces. Toss a coin to see who starts.</p>
+      <p><strong>Pieces.</strong> A piece fills one square and faces one of its four corners. Its pattern sets its points: crosshatched 1, dotted 2, plain 3, black 4.</p>
+      <p><strong>A turn.</strong> Roll the die first. Then arrange one piece: add one of yours to an empty square, turn any piece on the board, yours or another player's, or remove one. A piece you add or turn goes round as many corners as the die shows; a 4 turns it full circle.</p>
+      <p><strong>Three quarters.</strong> Three pieces in three of the four squares around one shared corner, each facing that corner, make a 3/4 circle. All three must have the same pattern. They can belong to anyone.</p>
+      <p><strong>Remove.</strong> To remove a piece, place a piece with the same pattern on it and take both, without adding their points. A player can remove a piece only three times in a game.</p>
+      <p><strong>Score.</strong> The player who completes the 3/4 circle takes its pieces off the board and scores their points. If one of them is on a yellow square, the score is doubled.</p>
+      <p><strong>Keep the board.</strong> The player whose move empties the board loses 10 points.</p>
+      <p><strong>Time.</strong> Each move has to be made in 20 seconds.</p>
+      <p><strong>Win.</strong> The first player to 25 points wins.</p>
+    </section>
+
+    <section>
+      <h2>Print it</h2>
+      <ul class="files">
+        <li style="--dot: var(--red)"><div><a href="3-quarters-board.pdf">The board</a><span>PDF, one page, 10 × 22 inches</span></div></li>
+        <li style="--dot: var(--ink)"><div><a href="3-quarters-pieces.pdf">The pieces</a><span>PDF, two pages, eight pieces for each of four players, to cut out</span></div></li>
+        <li style="--dot: var(--green)"><div><a href="https://github.com/prayasabhinav/games/blob/main/3-quarters/3-quarters-rules-clarified.md">The rules</a><span>As above, with the six points the 2022 rules left open settled in October 2026</span></div></li>
+        <li style="--dot: var(--blue)"><div><a href="https://github.com/prayasabhinav/games/blob/main/3-quarters/3-quarters-rules.md">The 2022 rules</a><span>The first version, eight points, kept as written</span></div></li>
+        <li style="--dot: var(--yellow)"><div><a href="https://github.com/prayasabhinav/games/blob/main/3-quarters/3-quarters-about.md">What the game is for</a><span>Why a warm-up, and what was still to be tested</span></div></li>
+        <li style="--dot: var(--navy)"><div><a href="https://boardgame.syntax.prayasabhinav.net/#games/3-quarters">Open it in boardgameBuilder</a><span>To change the game block by block</span></div></li>
+      </ul>
+    </section>
+  </article>
+
+  <p class="credit">Designed by <a href="https://prayasabhinav.net/design">Prayas Abhinav</a> in August 2022. Under <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0</a>: print it, change it, and name me. Source on <a href="https://github.com/prayasabhinav/games/tree/main/3-quarters">GitHub</a>. More of my games and design work at <a href="https://prayasabhinav.net/design">prayasabhinav.net</a>.</p>
+</main>
+</body>
+</html>
