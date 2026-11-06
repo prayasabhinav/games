@@ -1,13 +1,14 @@
 # Games by Prayas Abhinav
 
-Two games I designed, with their rules and the files to print and play them.
+Games I designed, with their rules and the files to print and play them.
 
 - **3 Quarters** (2022): a board game I made as a warm-up for students. Players place, turn and remove quarter-circle pieces on a printed board to complete three-quarter circles, and score the points on the pieces. The first to 25 wins.
 - **All or Nothing** (2020): a card game for 2 to 4 players about completing a 12-slice pizza. Players add and take away slices with number cards, and whoever completes the pizza scores a point for every card in the centre.
+- **Matbhed** (2023): a board game I designed with Jaskaran Singh for Conflictorium's Re-Art25 project, about Article 25 of the Constitution of India, the freedom of religion. Players cross a maze and answer cards on religion and the law, printed in English and Gujarati, and a Judge scores each answer. Its files and rules are in [`matbhed/`](matbhed/README.md).
 
-Both are among the known games in boardgameBuilder, at https://boardgame.blevn.xyz, where each can be downloaded as a design and opened to change.
+3 Quarters and All or Nothing are among the known games in boardgameBuilder, at https://boardgame.blevn.xyz, where each can be downloaded as a design and opened to change.
 
-I first published them in 2022 under another GitHub account of mine, which I can no longer sign in to. This repository is their home now. The texts are as I wrote them then; only their links to images and print files now point to the copies here.
+I first published those two in 2022 under another GitHub account of mine, which I can no longer sign in to. This repository is their home now. The texts are as I wrote them then; only their links to images and print files now point to the copies here.
 
 ## 3 Quarters
 
@@ -34,6 +35,10 @@ You also need a four-sided die and a phone to time each move.
 | [`print/all-or-nothing-print-and-setup.md`](all-or-nothing/print/all-or-nothing-print-and-setup.md) | How many of each card to print |
 | [`photos/all-or-nothing-photo-front.jpg`](all-or-nothing/photos/all-or-nothing-photo-front.jpg) | The boxed game |
 
+## Matbhed
+
+The board, 53 cards in English and in Gujarati, objection tokens, the rules, and the card texts with the file that builds them. See [`matbhed/README.md`](matbhed/README.md).
+
 ## Licence
 
-3 Quarters is under Creative Commons Attribution 4.0. All or Nothing carries no licence.
+3 Quarters and Matbhed are under Creative Commons Attribution 4.0. All or Nothing carries no licence.
