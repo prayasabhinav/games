@@ -313,7 +313,7 @@ footer a { color: var(--ink-blue); }
     <li>A card is drawn only when a move ends on a coloured box; passing over one draws nothing. A box is never used up: landing on it again draws the next card of its colour.</li>
     <li>Each colour's cards are shuffled at the start. When a colour runs out, its cards are shuffled and used again.</li>
     <li>Counters may share a square.</li>
-    <li>The Judge is chosen from a list: all the players together, one of the players, or someone not playing. When all the players judge, everyone except the player who gave an answer scores it. Everyone except the answerer and the objector rules on an objection.</li>
+    <li>The Judge is chosen from a list: all the players together, one of the players, or someone not playing. When all the players judge, everyone except the player who gave an answer scores it. Everyone except the answerer and the objector rules on an objection. When that leaves nobody, as with two players, the answerer and the objector rule on it themselves, since together they are the Judge.</li>
     <li>If the Judge is one of the players, the other players together score the Judge's own answers and rule on objections to them. A player who is the Judge does not object, since the Judge rules on objections.</li>
     <li>An objection is raised after the Judge has scored the answer. It costs the objector one token whatever the ruling, and the objector then gives their own answer.</li>
     <li>A valid objection moves the points that answer earned from the player who answered to the objector. No more objections can be made to that answer. An objection that is not valid costs the objector 2 points (never below 0), and other players may still object to the same answer.</li>
@@ -536,7 +536,7 @@ function mayAct(name, arg, d) {
   const mover = G.players[G.turn].dev === d, judging = judges().includes(d);
   return {
     roll: G.phase === "roll" && mover,
-    dir: G.phase === "dir" && mover && arg in MOVE,
+    dir: G.phase === "dir" && mover && Object.hasOwn(MOVE, arg),
     cardroll: G.phase === "card" && mover,
     score: G.phase === "card" && judging && /^[1-7]$/.test(arg),
     object: G.phase === "object" && canObject().includes(+arg) && G.players[+arg].dev === d,
@@ -729,7 +729,7 @@ function host() {
     } else if (m.t === "hello") {
       net.guests.set(m.from, String(m.name).trim().slice(0, 24) || "A guest");
       guestsChanged();
-    } else if (m.t === "left" && net.guests.has(m.id)) {
+    } else if (m.t === "left" && m.from === undefined && net.guests.has(m.id)) {   // only the relay's own notice has no sender
       const name = net.guests.get(m.id);
       net.guests.delete(m.id);
       if (!G) return guestsChanged();
@@ -774,14 +774,14 @@ async function join(code) {
         return;
       }
       net.id = m.id;
+      net.hostId = Math.min(...m.peers);   // the host made the room, so it has the lowest id in it
       send({ t: "hello", name });
-    } else if (m.t === "lobby") {
-      net.hostId = m.from; G = null;
+    } else if (m.t === "lobby" && m.from === net.hostId) {
+      G = null;
       $("#game").hidden = true; $("#end").hidden = true; $("#join").hidden = false;
       const here = m.guests.map(g => esc(g.name)).join(", ");
       $("#join").innerHTML = `<h2>Waiting for ${esc(m.host)} to start</h2><p>${esc(m.host)} is hosting this game.</p><p>Here so far: ${here}.</p>`;
-    } else if (m.t === "state") {
-      net.hostId = m.from;
+    } else if (m.t === "state" && m.from === net.hostId) {
       const fresh = !G || $("#game").hidden;
       G = m.view;
       $("#join").hidden = true;
@@ -789,7 +789,7 @@ async function join(code) {
       $("#end").hidden = true; $("#game").hidden = false;
       if (fresh) drawBoard();
       render();
-    } else if (m.t === "left" && m.id === net.hostId) note("The host has left the game.", true);
+    } else if (m.t === "left" && m.from === undefined && m.id === net.hostId) note("The host has left the game.", true);
   });
 }
 

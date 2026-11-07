@@ -202,7 +202,7 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
   </div>
   <div id="seats"></div>
   <p class="note" id="rowsNote"></p>
-  <div class="row"><label><input type="checkbox" id="timer"> 20-second move timer</label></div>
+  <div class="row"><label><input type="checkbox" id="timer" checked> 20-second move timer</label></div>
   <div class="row"><button class="tab big" id="start">Toss the coin and start</button></div>
   <div id="net">
     <h3>Play on separate devices</h3>
@@ -297,9 +297,9 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
     <li>A remove does not use the die. You cover any piece, your own or another player's, with a piece of the same pattern from your hand, and both come off. The covered piece goes back to its owner and yours goes back to you. Nobody scores. It uses one of your three removes.</li>
     <li>The 10-point penalty falls on whoever's move leaves the board empty, whether by a circle or a remove; a circle's points are added first. Scores can go below zero.</li>
     <li>The win is checked after every move: the first to reach 25 or more wins at once.</li>
-    <li>With the timer on, the 20 seconds start when a person's turn starts, die roll included. If they run out, the turn passes with no action. Computer players are not timed.</li>
+    <li>The timer is on, as the rules ask; the table can turn it off before starting. With it on, the 20 seconds start when a person's turn starts, die roll included. If they run out, the turn passes with no action. Computer players are not timed.</li>
     <li>Every turn has a legal action, so there is no rule for passing: when the board holds a piece it can be turned, and when it is empty every piece is back in hand and can be added.</li>
-    <li>If the board is full, nobody can make a remove, and no corner has three pieces of one pattern round it, no circle can ever be made again. The game then ends and the highest score wins (shared on a tie).</li>
+    <li>If nobody can make a remove, now or after more pieces are added, and no corner can get three pieces of one pattern round it from the pieces there, its empty squares and the pieces in hand, no circle can ever be made again. The game then ends and the highest score wins (shared on a tie).</li>
     <li>Hands are open, as on a table: everyone can see everyone's pieces.</li>
     <li>The coin toss picks the first player at random; play then goes round in seat order: Blue, Yellow, Graphite, White.</li>
   </ol>
@@ -363,7 +363,18 @@ const facingIn = (g, k, pat) => k.around.filter(({sq, f}) => g.board[sq] && g.bo
 const canRemove = (g, p) => p.removes > 0 && g.board.some(q => q && p.hand[q.pat] > 0);
 // some corner has three pieces of one pattern round it, so turning alone could still score
 const turnsCanScore = g => g.corners.some(k => [0,1,2,3].some(pat => k.around.filter(({sq}) => g.board[sq] && g.board[sq].pat === pat).length >= 3));
-const stuck = g => g.board.every(Boolean) && !g.players.some(p => canRemove(g, p)) && !turnsCanScore(g);
+// some corner could still get three pieces of one pattern round it: those already there, plus as many
+// as its empty squares and the pieces of that pattern in hand allow; on a full board, those already there
+const circleStillPossible = g => g.corners.some(k => [0,1,2,3].some(pat => {
+  const there = k.around.filter(({sq}) => g.board[sq] && g.board[sq].pat === pat).length;
+  const empty = k.around.filter(({sq}) => !g.board[sq]).length;
+  const held = g.players.reduce((a, p) => a + p.hand[pat], 0);
+  return there + Math.min(empty, held) >= 3;
+}));
+// a remove is possible now, or could become possible once more pieces are added
+const removeStillPossible = (g, p) => canRemove(g, p) || (p.removes > 0 && p.hand.some(Boolean) && g.board.some(q => !q));
+// no circle and no remove can ever happen again; adding only fills squares, so this cannot undo itself
+const stuck = g => !g.players.some(p => removeStillPossible(g, p)) && !circleStillPossible(g);
 
 function legalMoves(g){
   const me = g.players[g.turn], out = [];
@@ -455,7 +466,7 @@ const where = sq => `row ${Math.floor(sq/3) + 1}, column ${sq%3 + 1}`;
 const chip = wash => `<svg class="chip" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="${wash}" stroke="#4a4a4f" stroke-width="1.5"/></svg>`;
 
 // cfg.who and owner: which device holds each seat, 0 for this one (the host's) or a guest's relay id
-let cfg = {n:2, cpu:[false, true, true, true], who:[0, 0, 0, 0], timer:false};
+let cfg = {n:2, cpu:[false, true, true, true], who:[0, 0, 0, 0], timer:true};
 let G = null, phase = 'roll', sel = {}, fx = null, timerId = 0, timerEnds = 0, lines = [];
 let owner = [0, 0, 0, 0], names = {};
 const net = {role:null, ws:null, id:0, hostId:0, name:'', guests:[]};
@@ -763,7 +774,7 @@ function hostHears(m){
     if (G) share(); else { lobby(); drawSetup(); }
   }
   if (m.t === 'act') guestAct(m);
-  if (m.t === 'left') guestLeft(m.id);
+  if (m.t === 'left' && m.from === undefined) guestLeft(m.id);   // only the relay's own notice, which has no sender
 }
 function guestAct(m){             // a guest's click, applied as a click here would be
   if (!G || cur().cpu || owner[G.turn] !== m.from) return;
@@ -807,15 +818,16 @@ function guestHears(m){
   if (m.t === 'welcome'){
     net.id = m.id;
     if (!m.peers.length) return gone('There is no game with this code.');
+    net.hostId = Math.min(...m.peers);   // the host made the room, so it has the lowest id in it
     send({t:'hello', name:net.name});
   }
+  if (m.from !== undefined && m.from !== net.hostId) return;   // a guest listens only to the host
   if (m.t === 'lobby'){
-    net.hostId = m.from;
     $('#game').hidden = true; $('#join').hidden = false;
     $('#joinSay').textContent = `${m.host} is setting up the game. Joined so far: ${m.guests.map(g => g.name).join(', ')}.`;
   }
-  if (m.t === 'state'){ net.hostId = m.from; show(m.view); }
-  if (m.t === 'left' && m.id === net.hostId) gone('The host has left the game.');
+  if (m.t === 'state') show(m.view);
+  if (m.t === 'left' && m.from === undefined && m.id === net.hostId) gone('The host has left the game.');
 }
 function show(v){                 // draw the host's table here
   const keepPick = phase === 'act' && v.phase === 'act', rolled = phase === 'roll' && v.phase === 'act';
