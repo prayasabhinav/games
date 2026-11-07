@@ -316,12 +316,12 @@ footer a { color: var(--ink-blue); }
     <li>The Judge is chosen from a list: all the players together, one of the players, or someone not playing. When all the players judge, everyone except the player who gave an answer scores it. Everyone except the answerer and the objector rules on an objection. When that leaves nobody, as with two players, the answerer and the objector rule on it themselves, since together they are the Judge.</li>
     <li>If the Judge is one of the players, the other players together score the Judge's own answers and rule on objections to them. A player who is the Judge does not object, since the Judge rules on objections.</li>
     <li>An objection is raised after the Judge has scored the answer. It costs the objector one token whatever the ruling, and the objector then gives their own answer.</li>
-    <li>A valid objection moves the points that answer earned from the player who answered to the objector. No more objections can be made to that answer. An objection that is not valid costs the objector 2 points (never below 0), and other players may still object to the same answer.</li>
+    <li>A valid objection moves the points that answer earned from the player who answered to the objector. No more objections can be made to that answer. An objection that is not valid costs the objector 2 points (never below 0), and other players may still object to the same answer; the same player cannot object to it twice.</li>
     <li>Only players still in the maze, with tokens left, can object. A player who has left keeps their points as they stand.</li>
     <li>Points are checked at the exit. A player whose points fell below the mark through an objection must earn them back before the exit lets them out.</li>
     <li>A card that asks for another roll uses the small die beside the card, which moves nobody.</li>
     <li>The first player to leave the maze wins. Play goes on until everyone has left, and the last screen lists the order in which they left.</li>
-    <li>On separate devices, whoever scored the answer presses “No objection” to move on. When several players judge together, the first of them to press counts.</li>
+    <li>On separate devices, whoever scored the answer presses “No objection” to move on. When several players judge together, the first of them to press counts, for a score, a ruling on an objection, or “No objection”.</li>
   </ol>
 </details>
 
@@ -439,7 +439,7 @@ async function start() {
   G = {
     players, need, judge: judgeDev ? "outside" : judge, judgeDev, judgeName: net.guests.get(judgeDev) || null,
     turn: 0, phase: "roll", roll: 0, steps: 0, dir: null, note: "Everyone starts just inside the entrance.",
-    card: null, answer: 0, objector: null, cardDie: 0, leftOrder: [],
+    card: null, answer: 0, objector: null, objected: [], cardDie: 0, leftOrder: [],
     decks: { red: [], yellow: [], green: [] },
   };
   $("#setup").hidden = true; $("#end").hidden = true; $("#game").hidden = false; $("#netnote").hidden = true;
@@ -512,7 +512,7 @@ function placePieces() {
 const cur = () => G.players[G.turn];
 const inMaze = () => G.players.filter(p => !p.left);
 const judgeIsPlayer = () => /^\d+$/.test(G.judge);
-const canObject = () => G.players.map((p, i) => i).filter(i => i !== G.turn && !G.players[i].left && G.players[i].tokens > 0
+const canObject = () => G.players.map((p, i) => i).filter(i => i !== G.turn && !G.objected.includes(i) && !G.players[i].left && G.players[i].tokens > 0
   && !(judgeIsPlayer() && i === +G.judge));
 // Who judges right now: the answer's scorer, or (with an objector) the one who rules.
 function judgeNow() {
@@ -577,13 +577,13 @@ function land() {
 }
 function score(n) {
   const p = cur();
-  p.pts += n; G.answer = n;
+  p.pts += n; G.answer = n; G.objected = [];
   G.note = `${esc(p.name)} earns ${plural(n, "point")}.`;
   if (!canObject().length) return nextTurn();
   G.phase = "object"; render();
 }
 function object(i) {
-  G.objector = i; G.players[i].tokens--; G.phase = "ruling"; render();
+  G.objector = i; G.objected.push(i); G.players[i].tokens--; G.phase = "ruling"; render();
 }
 function rule(valid) {
   const p = cur(), o = G.players[G.objector];

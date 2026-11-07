@@ -305,7 +305,7 @@ footer { margin-top: 28px; padding-top: 10px; border-top: 1.4px solid var(--grap
       <li>Whoever brings it to exactly 12 completes the pizza and scores one point for every card in the centre, so completing it early scores less.</li>
       <li><b>Double order</b>: this round's pizza needs 24 slices. <b>On the house</b>: if you complete this round's pizza, your points are doubled; if someone else does, the coupon is wasted.</li>
       <li>After a round the cards in the centre are shuffled back into the deck; you keep your hand.</li>
-      <li><b>Simple</b>: hands are hidden. <b>Challenge</b>: hands are face up, so you can plan ahead.</li>
+      <li><b>Simple</b>: hands are hidden. <b>Challenge</b>: hands are face up, so you can plan ahead, and a completed pizza scores double.</li>
     </ul>
   </details>
 
@@ -323,7 +323,7 @@ footer { margin-top: 28px; padding-top: 10px; border-top: 1.4px solid var(--grap
       <li><b>Scoring.</b> The cards in the centre include the opening card, the card that completes the pizza and any Double order or On the house card.</li>
       <li><b>Between rounds.</b> The centre is shuffled back into the deck. Hands are kept; a hand left short because the deck ran out is filled back up to four.</li>
       <li><b>The end.</b> The game ends after the round in which someone reaches the points target, or after the chosen number of rounds, whichever was set at the table. The highest score wins; level scores share the win.</li>
-      <li><b>Challenge mode.</b> Scoring is the same in both modes. I read the rules' "it also means more points" as rounds running longer when everyone can see what the others could play.</li>
+      <li><b>Challenge mode.</b> The rules say playing face up "also means more points": in Challenge a completed pizza scores twice the cards in the centre. On the house doubles that again, to four times.</li>
       <li><b>Speaking out.</b> Every number card is said in the rules' form, including the opening card ("0 + 2 = 2").</li>
       <li><b>Computer players</b> go down this list. Complete the pizza if they can. If not, play On the house. If not, play Double order when the pizza is within 7 slices of 12. If not, play the card that leaves the others the fewest ways to complete it: in Simple they reckon from the cards they cannot see, in Challenge from the hands they can. Between cards that are equal on that, they prefer a count they could complete themselves next turn, then the larger pizza. With no card that fits, they put their highest card under the deck.</li>
     </ol>
@@ -464,10 +464,10 @@ function swap(card) {
 }
 
 function endRound(seat) {
-  const cards = G.centre.length, doubled = seat !== null && G.house === seat;
-  const pts = seat === null ? 0 : cards * (doubled ? 2 : 1);
+  const cards = G.centre.length, doubled = seat !== null && G.house === seat, challenge = G.mode === 'challenge';
+  const pts = seat === null ? 0 : cards * (doubled ? 2 : 1) * (challenge ? 2 : 1);
   if (seat !== null) G.players[seat].score += pts;
-  G.result = { seat, cards, pts, doubled };
+  G.result = { seat, cards, pts, doubled, challenge };
   G.over = G.end.type === 'points' ? G.players.some(p => p.score >= G.end.n) : G.round >= G.end.n;
 }
 
@@ -828,7 +828,7 @@ function showRoundEnd() {
   if (r.seat === null) html = `<h2>Nobody completes the pizza</h2><p>The deck is empty and every player passed. Nobody scores this round.</p>`;
   else {
     const who = esc(G.players[r.seat].name);
-    html = `<h2>${who} completes the pizza</h2><p>${r.cards} cards in the centre${r.doubled ? ', doubled by On the house' : ''}: <b>${r.pts} points</b>.</p>`;
+    html = `<h2>${who} completes the pizza</h2><p>${r.cards} cards in the centre${r.doubled ? ', doubled by On the house' : ''}${r.challenge ? `${r.doubled ? ' and again' : ', doubled'} for Challenge` : ''}: <b>${r.pts} points</b>.</p>`;
   }
   const guest = net.role === 'guest';
   if (G.over) {
