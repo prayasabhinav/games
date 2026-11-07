@@ -228,6 +228,9 @@ footer a { color: var(--ink-blue); }
   .card p { font-size: 1.3rem; }
   .sheet { padding: 16px 14px; }
   .scorebtns { gap: 5px; }
+  /* the turn panel stays at the foot of the screen while the maze scrolls */
+  #game aside { display: contents; }
+  #panel { position: sticky; bottom: env(safe-area-inset-bottom, 0px); z-index: 5; min-height: 0; background: var(--paper); }
 }
 @media (prefers-reduced-motion: reduce) {
   .piece, .tumble .die, .card { transition: none; animation: none; }

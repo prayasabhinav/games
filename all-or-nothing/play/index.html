@@ -119,6 +119,16 @@ button.quiet { background: transparent; box-shadow: none; border-color: var(--gr
 #log { list-style: none; padding: 0; margin: 0; max-height: 11rem; overflow: auto; font-size: 1rem; color: var(--graphite-soft); }
 #log li { margin: 2px 0; }
 #log li:first-child { color: var(--graphite); }
+/* on a phone, your prompt, cards and choice stay at the foot of the screen while the table scrolls */
+@media (max-width: 560px) {
+  #hand-area { display: contents; }
+  #hand-zone { position: sticky; bottom: 0; z-index: 5; max-height: 55vh; overflow-y: auto; margin-top: 6px; padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--paper); border-top: 1.6px solid var(--graphite-soft); }
+  #hand { flex-wrap: nowrap; gap: 8px; }
+  #hand .card { flex: 1 1 0; width: auto; max-width: 110px; }
+  #prompt { margin-bottom: 6px; font-size: 1rem; }
+  #prompt b { font-size: 1.25rem; }
+  .log { padding: 12px 14px 0; }
+}
 #prompt { margin: 0 0 8px; font-size: 1.15rem; }
 #prompt b { font-family: var(--head); font-size: 1.5rem; }
 #hand { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
@@ -287,7 +297,7 @@ footer { margin-top: 28px; padding-top: 10px; border-top: 1.4px solid var(--grap
       </div>
     </div>
     <div id="hand-area">
-      <div>
+      <div id="hand-zone">
         <p id="prompt"></p>
         <div id="hand"></div>
         <div id="choice"></div>
