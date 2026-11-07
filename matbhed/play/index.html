@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Matbhed</title>
 <link rel="icon" href="data:,">
-<meta name="description" content="Play Matbhed on one screen: a maze, a die, and cards about Article 25 of the Constitution of India, the freedom of religion.">
+<meta name="description" content="Play Matbhed on one screen or on separate devices: a maze, a die, and cards about Article 25 of the Constitution of India, the freedom of religion.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Patrick+Hand&family=Baloo+Bhai+2:wght@400;500;600&display=swap" rel="stylesheet">
@@ -89,8 +89,9 @@ button.go:hover { background: var(--blue-3); }
 /* setup */
 #setup { max-width: 640px; margin: 10px auto 40px; }
 #names { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
-#names li { display: flex; gap: 8px; align-items: center; }
+#names li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 #names .swatch { flex: none; }
+#names .dev { flex: 0 1 10em; }
 input[type="text"], input[type="number"], select {
   font: inherit; color: var(--graphite);
   background: #fffdf6;
@@ -99,7 +100,7 @@ input[type="text"], input[type="number"], select {
   padding: .2em .5em;
   min-width: 0;
 }
-#names input { flex: 1; }
+#names input { flex: 1 1 8em; }
 #judge { flex: 1; cursor: pointer; }
 .field { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin: 18px 0 4px; }
 .field label { font: 600 1.45rem var(--hand); }
@@ -108,6 +109,25 @@ input[type="text"], input[type="number"], select {
 .hint { margin: 2px 0 0; color: var(--graphite-soft); font-size: 1rem; }
 .err { color: #9a4a3a; }
 .start { margin-top: 22px; display: flex; justify-content: flex-end; }
+
+/* separate devices */
+#remote { margin-top: 22px; padding-top: 14px; border-top: 1.4px dashed var(--blue-3); }
+#remote h3 { color: var(--ink-blue); }
+.code { font: 700 2.6rem/1 var(--hand); letter-spacing: .12em; color: var(--ink-blue); }
+#link { flex: 1 1 14em; }
+#join { max-width: 640px; margin: 10px auto 40px; }
+#netnote { max-width: 900px; margin: 0 auto 12px; padding: 8px 14px; background: var(--blue-1); border: 1.4px dashed var(--ink-blue); border-radius: 6px 10px 5px 9px; }
+#netnote button { margin-left: 10px; }
+.wait { margin: 14px 0 0; color: var(--ink-blue); }
+#form { width: min(640px, 96vw); height: 90vh; max-width: 96vw; max-height: 90vh; padding: 12px 14px 10px; color: var(--graphite);
+  background: var(--yellow-1); border: 1.8px solid var(--graphite); border-radius: 6px 12px 8px 14px / 14px 8px 12px 6px; box-shadow: 3px 4px 0 rgba(74, 74, 79, .12); }
+#form[open] { display: flex; flex-direction: column; gap: 8px; }
+#form::backdrop { background: rgba(74, 74, 79, .35); }
+#form .head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+#form h3 { color: var(--ink-blue); }
+#form iframe { flex: 1; width: 100%; border: 1.4px solid var(--graphite-soft); border-radius: 3px 8px 4px 9px; background: #fffdf6; }
+#form p { margin: 0; font-size: 1rem; }
+#form a { color: var(--ink-blue); }
 
 /* game */
 #game {
@@ -238,11 +258,13 @@ footer a { color: var(--ink-blue); }
 </header>
 
 <main>
+  <div id="netnote" role="status" hidden></div>
+
   <section id="setup" class="sheet">
     <h2>Who is playing</h2>
     <ol id="names"></ol>
     <button type="button" data-act="add" id="addBtn">Add a player</button>
-    <p class="hint">2 to 16 players, on this one screen.</p>
+    <p class="hint" id="howmany">2 to 16 players, on this one screen.</p>
     <div class="field">
       <label for="need">Points to exit</label>
       <input id="need" type="number" min="25" max="100" value="25">
@@ -253,9 +275,23 @@ footer a { color: var(--ink-blue); }
       <select id="judge"></select>
     </div>
     <p class="hint">The Judge scores every answer from 1 to 7 and rules on objections. The game says who judges each time.</p>
+    <div id="remote">
+      <h3>Play on separate devices</h3>
+      <div id="hostRow">
+        <p class="hint">Each player can play on their own phone or computer. Host the game here, then send the others the link.</p>
+        <div class="row"><input id="hostName" type="text" maxlength="24" placeholder="Your name" aria-label="Your name"><button type="button" data-act="host">Host a game</button></div>
+      </div>
+      <div id="hosting" hidden>
+        <p>Game code <span class="code" id="code"></span></p>
+        <div class="row"><input id="link" type="text" readonly aria-label="Link to join the game"><button type="button" data-act="copy" id="copyBtn">Copy</button></div>
+        <p class="hint" id="lobby"></p>
+      </div>
+    </div>
     <p class="err" id="err" hidden></p>
     <div class="start"><button type="button" class="go" data-act="start">Start</button></div>
   </section>
+
+  <section id="join" class="sheet" hidden></section>
 
   <section id="game" hidden>
     <div class="boardbox"><svg id="board" viewBox="-22 -46 644 694" role="img" aria-label="The maze, 15 squares by 15"></svg></div>
@@ -285,11 +321,19 @@ footer a { color: var(--ink-blue); }
     <li>Points are checked at the exit. A player whose points fell below the mark through an objection must earn them back before the exit lets them out.</li>
     <li>A card that asks for another roll uses the small die beside the card, which moves nobody.</li>
     <li>The first player to leave the maze wins. Play goes on until everyone has left, and the last screen lists the order in which they left.</li>
+    <li>On separate devices, whoever scored the answer presses “No objection” to move on. When several players judge together, the first of them to press counts.</li>
   </ol>
 </details>
 
+<dialog id="form" aria-labelledby="formTitle">
+  <div class="head"><h3 id="formTitle">How the game went</h3><button type="button" data-act="closeform">Close</button></div>
+  <iframe title="Form: how the game went"></iframe>
+  <p><a href="https://forms.prayasabhinav.net/f/play-matbhed" target="_blank" rel="noopener">Open the form in a new tab</a></p>
+</dialog>
+
 <footer>
-  <a href="../">Matbhed</a>, 2023, designed by Prayas Abhinav and Jaskaran Singh for Conflictorium's Re-Art25 project, Ahmedabad. Under <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 (CC BY 4.0)</a>. The game reads its cards from the text files in <a href="../cards/">cards/</a>, so a change to those files changes the cards in play.
+  <a href="../">Matbhed</a>, 2023, designed by Prayas Abhinav and Jaskaran Singh for Conflictorium's Re-Art25 project, Ahmedabad. Under <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 (CC BY 4.0)</a>. The game reads its cards from the text files in <a href="../cards/">cards/</a>, so a change to those files changes the cards in play.<br>
+  Played on separate devices, each move passes through a relay at games-relay.prayasabhinav.net, which keeps nothing.
 </footer>
 
 <script>
@@ -346,7 +390,7 @@ const cardText = () => { const list = cards[lang][G.card.colour]; return list[G.
 // ---------- setup ----------
 function nameRow(value = "") {
   const li = document.createElement("li");
-  li.innerHTML = `<span class="swatch"></span><input type="text" maxlength="24" aria-label="Player name"><button type="button" data-act="remove" aria-label="Remove this player">remove</button>`;
+  li.innerHTML = `<span class="swatch"></span><input type="text" maxlength="24" aria-label="Player name"><select class="dev" aria-label="Plays on" hidden></select><button type="button" data-act="remove" aria-label="Remove this player">remove</button>`;
   li.querySelector("input").value = value;
   $("#names").append(li);
   numberRows();
@@ -356,8 +400,18 @@ function judgeOptions() {
   const names = [...$("#names").querySelectorAll("input")].map((inp, i) => inp.value.trim() || `Player ${i + 1}`);
   sel.innerHTML = `<option value="all">All the players together</option>`
     + names.map((n, i) => `<option value="${i}">${esc(n)}</option>`).join("")
-    + `<option value="outside">Someone not playing</option>`;
+    + `<option value="outside">Someone not playing</option>`
+    + [...net.guests].map(([id, n]) => `<option value="guest-${id}">${esc(n)}, not playing</option>`).join("");
   sel.value = [...sel.options].some(o => o.value === keep) ? keep : "all";
+}
+// Each player is played on this device (0) or on a guest's device.
+function seatOptions() {
+  document.querySelectorAll("#names .dev").forEach(sel => {
+    const keep = sel.value;
+    sel.innerHTML = `<option value="0">on this device</option>` + [...net.guests].map(([id, n]) => `<option value="${id}">on ${esc(n)}’s device</option>`).join("");
+    sel.value = net.guests.has(+keep) ? keep : "0";
+    sel.hidden = net.role !== "host";
+  });
 }
 function numberRows() {
   const rows = [...$("#names").children];
@@ -369,6 +423,7 @@ function numberRows() {
   });
   $("#addBtn").disabled = rows.length >= 16;
   judgeOptions();
+  seatOptions();
 }
 
 async function start() {
@@ -376,16 +431,18 @@ async function start() {
   catch { const e = $("#err"); e.hidden = false; e.textContent = "The cards could not be loaded. Open this page through a web server, so it can read ../cards/."; return; }
   const need = Math.min(100, Math.max(25, Math.round(+$("#need").value) || 25));
   $("#need").value = need;
-  const players = [...$("#names").querySelectorAll("input")].map((inp, i) => ({
-    name: inp.value.trim() || `Player ${i + 1}`, r: ENTRY.r, c: ENTRY.c, pts: 0, tokens: 3, left: false,
+  const players = [...$("#names").children].map((li, i) => ({
+    name: li.querySelector("input").value.trim() || `Player ${i + 1}`, r: ENTRY.r, c: ENTRY.c, pts: 0, tokens: 3, left: false,
+    dev: +li.querySelector(".dev").value || 0,
   }));
+  const judge = $("#judge").value, judgeDev = judge.startsWith("guest-") ? +judge.slice(6) : 0;
   G = {
-    players, need, judge: $("#judge").value,
+    players, need, judge: judgeDev ? "outside" : judge, judgeDev, judgeName: net.guests.get(judgeDev) || null,
     turn: 0, phase: "roll", roll: 0, steps: 0, dir: null, note: "Everyone starts just inside the entrance.",
     card: null, answer: 0, objector: null, cardDie: 0, leftOrder: [],
     decks: { red: [], yellow: [], green: [] },
   };
-  $("#setup").hidden = true; $("#end").hidden = true; $("#game").hidden = false;
+  $("#setup").hidden = true; $("#end").hidden = true; $("#game").hidden = false; $("#netnote").hidden = true;
   drawBoard();
   render();
 }
@@ -445,7 +502,7 @@ function placePieces() {
     if (i === G.turn) g.parentNode.append(g); // current counter on top
   });
   const p = G.players[G.turn];
-  $("#arrows").innerHTML = G.phase !== "dir" ? "" : openDirs(p).map(d => {
+  $("#arrows").innerHTML = !mayAct("dir", "N", me()) ? "" : openDirs(p).map(d => {
     const x = p.c * CELL + CELL / 2 + MOVE[d][1] * 30, y = p.r * CELL + CELL / 2 + MOVE[d][0] * 30;
     return `<g class="hint-arrow" data-act="dir" data-arg="${d}" transform="translate(${x} ${y})"><circle r="10"/><text>${ARROW[d]}</text></g>`;
   }).join("");
@@ -461,11 +518,33 @@ const canObject = () => G.players.map((p, i) => i).filter(i => i !== G.turn && !
 function judgeNow() {
   const others = [G.turn, G.objector].filter(i => i != null).map(i => G.players[i].name);
   const except = `the other players together (not ${others.map(esc).join(" or ")})`;
-  if (G.judge === "outside") return "the Judge";
+  if (G.judge === "outside") return G.judgeName ? esc(G.judgeName) : "the Judge";
   if (G.judge === "all") return except;
   return +G.judge === G.turn ? except : esc(G.players[+G.judge].name);
 }
-const judgeLabel = () => G.judge === "outside" ? "someone not playing" : G.judge === "all" ? "all the players together" : esc(G.players[+G.judge].name);
+const judgeLabel = () => G.judge === "outside" ? (G.judgeName ? `${esc(G.judgeName)}, not playing` : "someone not playing")
+  : G.judge === "all" ? "all the players together" : esc(G.players[+G.judge].name);
+// The devices of whoever judges right now (judgeNow names them). If nobody is left to rule, any device may.
+function judges() {
+  if (G.judge === "outside") return [G.judgeDev];
+  if (G.judge !== "all" && +G.judge !== G.turn) return [G.players[+G.judge].dev];
+  const devs = G.players.filter((p, i) => i !== G.turn && i !== G.objector).map(p => p.dev);
+  return devs.length ? devs : G.players.map(p => p.dev);
+}
+// May device d make this move now? Undefined for anything that is not a move in the game.
+function mayAct(name, arg, d) {
+  const mover = G.players[G.turn].dev === d, judging = judges().includes(d);
+  return {
+    roll: G.phase === "roll" && mover,
+    dir: G.phase === "dir" && mover && arg in MOVE,
+    cardroll: G.phase === "card" && mover,
+    score: G.phase === "card" && judging && /^[1-7]$/.test(arg),
+    object: G.phase === "object" && canObject().includes(+arg) && G.players[+arg].dev === d,
+    noobject: G.phase === "object" && judging,
+    valid: G.phase === "ruling" && judging,
+    invalid: G.phase === "ruling" && judging,
+  }[name];
+}
 
 function roll() {
   G.phase = "rolling"; render();
@@ -487,7 +566,7 @@ function walk() {
   }
   if (p.r === EXIT.r && p.c === EXIT.c && G.dir === "N") return leave();
   p.r += MOVE[G.dir][0]; p.c += MOVE[G.dir][1]; G.steps--;
-  placePieces();
+  placePieces(); share();
   setTimeout(walk, STEP_MS);
 }
 function land() {
@@ -538,7 +617,9 @@ function end() {
   $("#end").innerHTML = `<h2>Everyone has left the maze</h2>
     <p>In the order they left:</p>
     <ol>${G.leftOrder.map((i, k) => `<li>${swatch(i)} ${esc(G.players[i].name)}${k === 0 ? " <strong>wins</strong>" : ""}, with ${plural(G.players[i].pts, "point")}</li>`).join("")}</ol>
-    <div class="start"><button type="button" class="go" data-act="again">Play again</button></div>`;
+    <p><button type="button" data-act="form">Tell me how the game went</button></p>
+    ${net.role === "guest" ? `<p class="hint">The host can start another game.</p>` : `<div class="start"><button type="button" class="go" data-act="again">Play again</button></div>`}`;
+  share();
 }
 
 // ---------- drawing the panel ----------
@@ -576,8 +657,14 @@ function render() {
       <button type="button" data-act="invalid">Not valid: ${esc(o.name)} loses ${INVALID_OBJECTION_COST}</button></div>`;
   }
   $("#panel").innerHTML = html;
+  // On separate devices, controls for another device's seat are shown but disabled.
+  const buttons = [...$("#panel").querySelectorAll("button[data-act]")];
+  buttons.forEach(b => { if (mayAct(b.dataset.act, b.dataset.arg, me()) === false) b.disabled = true; });
+  const waiting = { roll: esc(p.name), dir: esc(p.name), card: judgeNow(), object: judgeNow(), ruling: judgeNow() }[G.phase];
+  if (waiting && buttons.every(b => b.disabled)) $("#panel").insertAdjacentHTML("beforeend", `<p class="wait">Waiting for ${waiting}.</p>`);
   renderScores();
   placePieces();
+  share();
 }
 
 function renderScores() {
@@ -599,32 +686,158 @@ async function setLang(l) {
   if (G && G.phase === "card") render();
 }
 
+// ---------- separate devices ----------
+// Moves pass through a relay that keeps nothing. The host's page runs the game and, after every change,
+// sends each guest the table; a guest sends back the moves it makes. Device 0 is the host's own (or the only) device.
+const RELAY = "wss://games-relay.prayasabhinav.net/matbhed-";
+const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const net = { role: null, ws: null, id: 0, hostId: null, name: "", guests: new Map() };   // guests: id -> name
+const me = () => net.role === "guest" ? net.id : 0;
+const send = m => net.ws.send(JSON.stringify(m));
+const newCode = () => Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
+
+function connect(code, onMessage) {
+  net.ws = new WebSocket(RELAY + code);
+  net.ws.onmessage = e => onMessage(JSON.parse(e.data));
+  net.ws.onclose = () => note(net.role === "guest" ? "The connection to the game has closed." : "The connection to the other devices has closed.", net.role === "guest");
+}
+function note(text, back) {
+  $("#netnote").hidden = false;
+  $("#netnote").innerHTML = esc(text) + (back ? `<button type="button" data-act="leave">Back to setup</button>` : "");
+}
+
+// What a guest may see: the whole table, since every card is read aloud. Only the order of the decks stays with the host.
+const view = () => ({ ...G, decks: null });
+function share() {
+  if (net.role === "host" && G) for (const id of net.guests.keys()) send({ t: "state", view: view(), to: id });
+}
+// A guest's move goes through the same path as a click on the host's screen, if that guest holds the seat and the move is legal now.
+function applyAct(m) {
+  if (G && mayAct(m.act, m.arg, m.from)) ACT[m.act](m.arg);
+}
+
+function host() {
+  net.name = $("#hostName").value.trim() || "The host";
+  const code = newCode(), link = `${location.origin}${location.pathname}?room=${code}`;
+  connect(code, m => {
+    if (m.t === "welcome") {
+      net.role = "host";
+      $("#hostRow").hidden = true; $("#hosting").hidden = false;
+      $("#code").textContent = code; $("#link").value = link;
+      $("#howmany").textContent = "2 to 16 players, on this screen or on their own devices.";
+      guestsChanged();
+    } else if (m.t === "hello") {
+      net.guests.set(m.from, String(m.name).trim().slice(0, 24) || "A guest");
+      guestsChanged();
+    } else if (m.t === "left" && net.guests.has(m.id)) {
+      const name = net.guests.get(m.id);
+      net.guests.delete(m.id);
+      if (!G) return guestsChanged();
+      note(`${name} left. Their seat is played on this device now.`);
+      G.players.forEach(p => { if (p.dev === m.id) p.dev = 0; });
+      if (G.judgeDev === m.id) { G.judgeDev = 0; G.judgeName = null; }
+      if (G.phase !== "over") render();
+    } else if (m.t === "act") applyAct(m);
+  });
+}
+function guestsChanged() {
+  if (G) return share();
+  seatOptions(); judgeOptions();
+  const names = [...net.guests.values()];
+  $("#lobby").textContent = names.length ? `Joined: ${names.join(", ")}. For each player, choose the device they play on.` : "Nobody has joined yet.";
+  send({ t: "lobby", host: net.name, guests: [...net.guests].map(([id, name]) => ({ id, name })) });
+}
+function copyLink() {
+  navigator.clipboard.writeText($("#link").value).then(() => { $("#copyBtn").textContent = "Copied"; }, () => $("#link").select());
+}
+
+function joinScreen(code) {
+  $("#setup").hidden = true; $("#join").hidden = false;
+  $("#join").innerHTML = `<h2>Join a game</h2><p>Game code <span class="code">${code}</span></p>
+    <div class="field"><label for="guestName">Your name</label><input id="guestName" type="text" maxlength="24"></div>
+    <p class="err" id="joinErr" hidden></p>
+    <div class="start"><button type="button" class="go" data-act="join" data-arg="${code}">Join</button></div>`;
+  $("#guestName").focus();
+}
+async function join(code) {
+  const name = $("#guestName").value.trim(), err = $("#joinErr");
+  if (!name) { err.hidden = false; err.textContent = "Type your name first."; return; }
+  try { await loadCards(lang); }
+  catch { err.hidden = false; err.textContent = "The cards could not be loaded."; return; }
+  net.role = "guest"; net.name = name;
+  $("#join").innerHTML = `<h2>Join a game</h2><p>Connecting…</p>`;
+  connect(code, m => {
+    if (m.t === "welcome") {
+      if (!m.peers.length) {
+        net.ws.onclose = null; net.ws.close();
+        $("#join").innerHTML = `<h2>Join a game</h2><p class="err">No game is open with the code ${code}. Check the link with the host.</p>`;
+        return;
+      }
+      net.id = m.id;
+      send({ t: "hello", name });
+    } else if (m.t === "lobby") {
+      net.hostId = m.from; G = null;
+      $("#game").hidden = true; $("#end").hidden = true; $("#join").hidden = false;
+      const here = m.guests.map(g => esc(g.name)).join(", ");
+      $("#join").innerHTML = `<h2>Waiting for ${esc(m.host)} to start</h2><p>${esc(m.host)} is hosting this game.</p><p>Here so far: ${here}.</p>`;
+    } else if (m.t === "state") {
+      net.hostId = m.from;
+      const fresh = !G || $("#game").hidden;
+      G = m.view;
+      $("#join").hidden = true;
+      if (G.phase === "over") return end();
+      $("#end").hidden = true; $("#game").hidden = false;
+      if (fresh) drawBoard();
+      render();
+    } else if (m.t === "left" && m.id === net.hostId) note("The host has left the game.", true);
+  });
+}
+
 // ---------- input ----------
 const ACT = {
   add: () => nameRow(),
-  remove: b => { b.closest("li").remove(); numberRows(); },
-  start, roll,
-  lang: b => setLang(b.dataset.arg),
-  dir: b => choose(b.dataset.arg),
+  remove: (a, b) => { b.closest("li").remove(); numberRows(); },
+  start, roll, host, join,
+  copy: copyLink,
+  leave: () => { location.href = location.pathname; },
+  lang: a => setLang(a),
+  dir: a => choose(a),
   cardroll: () => { G.cardDie = 1 + Math.floor(Math.random() * 6); render(); },
-  score: b => score(+b.dataset.arg),
-  object: b => object(+b.dataset.arg),
+  score: a => score(+a),
+  object: a => object(+a),
   noobject: nextTurn,
   valid: () => rule(true),
   invalid: () => rule(false),
-  again: () => { $("#end").hidden = true; $("#setup").hidden = false; G = null; },
+  form: () => {   // the form loads only when first opened
+    const f = $("#form iframe");
+    if (!f.src) f.src = "https://forms.prayasabhinav.net/f/play-matbhed";
+    $("#form").showModal();
+  },
+  closeform: () => $("#form").close(),
+  again: () => { $("#end").hidden = true; $("#setup").hidden = false; G = null; if (net.role === "host") guestsChanged(); },
 };
+// A press on this device: a guest sends its moves to the host; anything else is done here.
+function press(name, arg, el) {
+  if (G && mayAct(name, arg, me()) === false) return;
+  if (net.role === "guest" && G && mayAct(name, arg, me())) return send({ t: "act", act: name, arg, to: net.hostId });
+  ACT[name](arg, el);
+}
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-act]");
-  if (b && !b.disabled) ACT[b.dataset.act](b);
+  if (b && !b.disabled) press(b.dataset.act, b.dataset.arg, b);
 });
 document.addEventListener("input", e => { if (e.target.closest("#names")) judgeOptions(); });
+document.addEventListener("change", e => {   // a seat given to a guest takes the guest's name
+  if (e.target.matches("#names .dev") && +e.target.value) { e.target.closest("li").querySelector("input").value = net.guests.get(+e.target.value); judgeOptions(); }
+});
 document.addEventListener("keydown", e => {
   const d = { ArrowUp: "N", ArrowRight: "E", ArrowDown: "S", ArrowLeft: "W" }[e.key];
-  if (d && G && G.phase === "dir") { e.preventDefault(); choose(d); }
+  if (d && G && G.phase === "dir") { e.preventDefault(); press("dir", d); }
 });
 
 nameRow(); nameRow();
+const room = (new URLSearchParams(location.search).get("room") || "").toUpperCase();
+if (new RegExp(`^[${CODE_CHARS}]{5}$`).test(room)) joinScreen(room);
 </script>
 </body>
 </html>

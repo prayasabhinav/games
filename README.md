@@ -43,7 +43,7 @@ The board, 53 cards in English and in Gujarati, objection tokens, the rules, and
 
 ## Play in a browser
 
-Each game can also be played on one screen, free and with no sign-in: [3 Quarters](https://prayasabhinav.github.io/games/3-quarters/play/), [All or Nothing](https://prayasabhinav.github.io/games/all-or-nothing/play/) and [Matbhed](https://prayasabhinav.github.io/games/matbhed/play/). In 3 Quarters and All or Nothing a seat can be played by the computer. Each page lists, under *How this version reads the rules*, where the written rules left something open and what the page does there.
+Each game can also be played in a browser, free and with no sign-in, on one screen or on separate devices: [3 Quarters](https://prayasabhinav.github.io/games/3-quarters/play/), [All or Nothing](https://prayasabhinav.github.io/games/all-or-nothing/play/) and [Matbhed](https://prayasabhinav.github.io/games/matbhed/play/). For separate devices, one player hosts and the others join with a link or a five-letter code; moves pass through a small relay, games-relay.prayasabhinav.net, which keeps nothing. In 3 Quarters and All or Nothing a seat can be played by the computer. When a game ends, each page offers a short form to say how it went. Each page lists, under *How this version reads the rules*, where the written rules left something open and what the page does there.
 
 ## Licence
 

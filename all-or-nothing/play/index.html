@@ -67,6 +67,13 @@ button.quiet { background: transparent; box-shadow: none; border-color: var(--gr
 }
 .ends { display: grid; gap: 8px; }
 .ends input[type=number] { font: inherit; width: 4.2rem; padding: 2px 6px; background: #fff8; border: 1.4px solid var(--graphite-soft); border-radius: 6px; }
+.code { font: 700 2.6rem/1 var(--head); letter-spacing: .12em; color: var(--ink-blue); }
+.linkline { display: flex; gap: 8px; align-items: center; }
+.linkline input, #join-name {
+  font: inherit; color: var(--graphite); min-width: 0; flex: 1; padding: 4px 8px;
+  background: #fff8; border: none; border-bottom: 1.6px solid var(--graphite);
+}
+#hosting p, #join p { margin: 6px 0; }
 @media (max-width: 560px) { .field { grid-template-columns: 1fr; gap: 4px; } .seat-row { flex-wrap: nowrap; } .seat-row input { width: 8rem; } .seat-row button { padding: 6px 10px; } }
 
 /* table */
@@ -183,6 +190,14 @@ footer { margin-top: 28px; padding-top: 10px; border-top: 1.4px solid var(--grap
   #hand-area { padding: 8px 0 10px; min-height: 0; }
   #hand { justify-content: center; gap: 8px; }
 }
+#form-dialog {
+  width: min(640px, 96vw); height: 90vh; max-width: none; max-height: none; padding: 0; color: var(--graphite);
+  background: var(--yellow-1); border: 1.6px solid var(--graphite); border-radius: 18px 6px 22px 8px / 8px 20px 6px 18px;
+}
+#form-dialog[open] { display: flex; flex-direction: column; }
+#form-dialog::backdrop { background: rgba(74,74,79,.35); }
+.dlg-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1.4px solid var(--graphite-soft); font-size: .95rem; }
+#form-frame { flex: 1; width: 100%; border: 0; background: var(--paper); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
@@ -231,10 +246,27 @@ footer { margin-top: 28px; padding-top: 10px; border-top: 1.4px solid var(--grap
         <label><input type="radio" name="end" value="rounds"> after <input type="number" id="end-rounds" value="5" min="1" max="99"> rounds</label>
       </div>
     </div>
+    <div class="field"><span class="lab">Devices</span>
+      <div>
+        <button id="host">Host a game</button> <span id="host-note">to play on separate devices</span>
+        <div id="hosting" hidden>
+          <p>Code <span class="code" id="code"></span></p>
+          <div class="linkline"><input id="link" readonly aria-label="Link for the other devices"><button id="copy">Copy</button></div>
+          <p id="joined"></p>
+        </div>
+      </div>
+    </div>
     <button id="start" class="big">Deal the cards</button>
   </section>
   <div class="fan" id="fan" aria-hidden="true"></div>
   </div>
+
+  <section id="join" class="sheet" hidden>
+    <h2>Join a game</h2>
+    <p>Game <span class="code" id="join-code"></span></p>
+    <div class="linkline" id="join-form"><input id="join-name" maxlength="16" placeholder="Your name" aria-label="Your name"><button id="join-go" class="big">Join</button></div>
+    <p id="join-wait"></p>
+  </section>
 
   <section id="table" hidden>
     <div class="status"><span id="status"></span><span class="grow"></span><button class="quiet" id="leave">Leave the table</button></div>
@@ -298,7 +330,8 @@ footer { margin-top: 28px; padding-top: 10px; border-top: 1.4px solid var(--grap
   </details>
 
   <footer>
-    All or Nothing, a card game by Prayas Abhinav, 2020, published 2022. <a href="https://github.com/prayasabhinav/games/tree/main/all-or-nothing">Rules and print files</a>.
+    All or Nothing, a card game by Prayas Abhinav, 2020, published 2022. <a href="https://github.com/prayasabhinav/games/tree/main/all-or-nothing">Rules and print files</a>.<br>
+    On separate devices, moves pass through a relay at games-relay.prayasabhinav.net, which keeps nothing.
   </footer>
 </main>
 
@@ -314,6 +347,11 @@ footer { margin-top: 28px; padding-top: 10px; border-top: 1.4px solid var(--grap
 <div class="overlay foot" id="roundend" hidden>
   <div class="sheet" id="roundend-sheet"></div>
 </div>
+
+<dialog id="form-dialog" aria-label="Tell me how the game went">
+  <div class="dlg-top"><a href="https://forms.prayasabhinav.net/f/play-all-or-nothing" target="_blank" rel="noopener">Open in a new tab</a><button id="form-close">Close</button></div>
+  <iframe id="form-frame" title="Tell me how the game went"></iframe>
+</dialog>
 
 <script>
 // ---------- the game ----------
@@ -339,7 +377,7 @@ function shuffle(a) {
 
 function newGame(players, mode, end) {
   G = {
-    players: players.map(p => ({ name: p.name, cpu: p.cpu, hand: [], score: 0 })),
+    players: players.map(p => ({ name: p.name, cpu: p.cpu, dev: p.dev, hand: [], score: 0 })), // dev: the guest device holding the seat
     mode, end, deck: shuffle(newDeck()), centre: [], count: 0, target: 12, house: null,
     turn: 0, opener: 0, passes: 0, round: 1, said: {}, log: [], result: null, over: false,
   };
@@ -599,45 +637,54 @@ function renderSetup() {
   $('#seat-rows').innerHTML = setup.seats.slice(0, setup.n).map((s, i) => `
     <div class="seat-row" data-i="${i}">
       <input value="${s.name.replace(/"/g, '&quot;')}" maxlength="16" aria-label="Name for seat ${i + 1}">
-      <div class="seg"><button data-cpu="0" aria-pressed="${!s.cpu}">Person</button><button data-cpu="1" aria-pressed="${s.cpu}">Computer</button></div>
+      <div class="seg"><button data-cpu="0" aria-pressed="${!s.cpu && !s.dev}">${net.role === 'host' ? 'This device' : 'Person'}</button>${
+        net.guests.map(g => `<button data-dev="${g.id}" aria-pressed="${s.dev === g.id}">${esc(g.name)}</button>`).join('')
+      }<button data-cpu="1" aria-pressed="${s.cpu}">Computer</button></div>
     </div>`).join('');
   for (const b of document.querySelectorAll('#mode button')) b.setAttribute('aria-pressed', b.dataset.v === setup.mode);
+  $('#joined').textContent = `${net.note} ${net.guests.length ? `Joined: ${net.guests.map(g => g.name).join(', ')}.` : 'Nobody has joined yet.'}`.trim();
+  lobby();
 }
 
 $('#np').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { setup.n = +b.dataset.n; renderSetup(); } });
 $('#mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { setup.mode = b.dataset.v; renderSetup(); } });
-$('#seat-rows').addEventListener('input', e => { setup.seats[e.target.closest('.seat-row').dataset.i].name = e.target.value; });
+$('#seat-rows').addEventListener('input', e => { setup.seats[e.target.closest('.seat-row').dataset.i].name = e.target.value; lobby(); });
 $('#seat-rows').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   const s = setup.seats[b.closest('.seat-row').dataset.i];
   s.cpu = b.dataset.cpu === '1';
-  s.name = s.name.replace(/^(Player|Computer)(?= \d$)/, s.cpu ? 'Computer' : 'Player');
+  s.dev = +b.dataset.dev || null;
+  if (s.dev) s.name = net.guests.find(g => g.id === s.dev).name;
+  else s.name = s.name.replace(/^(Player|Computer)(?= \d$)/, s.cpu ? 'Computer' : 'Player');
   renderSetup();
 });
 
 $('#start').addEventListener('click', () => {
   const type = document.querySelector('input[name=end]:checked').value;
   const n = Math.max(1, Math.round(+$(type === 'points' ? '#end-points' : '#end-rounds').value || 1));
-  const players = setup.seats.slice(0, setup.n).map((s, i) => ({ name: s.name.trim() || `Player ${i + 1}`, cpu: s.cpu }));
+  const players = setup.seats.slice(0, setup.n).map((s, i) => ({ name: s.name.trim() || `Player ${i + 1}`, cpu: s.cpu, dev: s.dev }));
   newGame(players, setup.mode, { type, n });
   $('#setup').hidden = true; $('#table').hidden = false;
   advance();
 });
 
-$('#leave').addEventListener('click', toSetup);
+$('#leave').addEventListener('click', () => net.role === 'guest' ? location.assign(location.pathname) : toSetup());
 
 function toSetup() {
   clearTimeout(ui.timer);
   G = null;
   $('#table').hidden = true; $('#roundend').hidden = true; $('#cover').hidden = true; $('#setup').hidden = false;
+  lobby();
 }
 
-const humans = () => G.players.filter(p => !p.cpu);
+// a seat played on this device (not by the computer, not on another device)
+const here = p => !p.cpu && (net.role === 'guest' ? p.dev === net.id : !p.dev);
+const humans = () => G.players.filter(here);
 
-// whose hand is shown at the bottom: the person whose turn it is, or the only person at the table
+// whose hand is shown at the bottom: the person here whose turn it is, or the only person here
 function viewer() {
   const p = G.players[G.turn];
-  if (!p.cpu) return p;
+  if (here(p)) return p;
   return humans().length === 1 ? humans()[0] : null;
 }
 
@@ -648,7 +695,7 @@ function advance() {
   const p = G.players[G.turn];
   if (G.result) showRoundEnd();
   else if (p.cpu) ui.timer = setTimeout(() => { cpuTurn(); advance(); }, CPU_DELAY);
-  else if (G.mode === 'simple' && humans().length > 1) {
+  else if (here(p) && G.mode === 'simple' && humans().length > 1) {
     ui.covered = true;
     $('#cover-title').textContent = `Pass the screen to ${p.name}`;
     $('#cover-go').textContent = `Show ${p.name}'s cards`;
@@ -691,6 +738,7 @@ function render() {
 
   renderHand();
   $('#log').innerHTML = G.log.map(l => `<li>${esc(l)}</li>`).join('');
+  share();
 }
 
 function renderHand() {
@@ -733,18 +781,38 @@ function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<'
 $('#hand').addEventListener('click', e => {
   const b = e.target.closest('button.card'); if (!b || b.disabled) return;
   const hand = G.players[G.turn].hand, card = hand.find(c => c.id === +b.dataset.id);
-  const plays = playsFor(hand).filter(p => p.card === card);
-  if (!plays.length) { swap(card); return advance(); }
-  if (card.kind === 'black') { ui.choice = card; return renderHand(); }
-  play(plays[0]); advance();
+  if (card.kind === 'black' && playsFor(hand).some(p => p.card === card)) { ui.choice = card; return renderHand(); }
+  move('card', { id: card.id });
 });
 
 $('#choice').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return;
-  if (b.dataset.pass) { swap(null); return advance(); }
+  if (b.dataset.pass) return move('pass');
   if (b.dataset.cancel) { ui.choice = null; return renderHand(); }
-  play({ card: ui.choice, sign: +b.dataset.sign }); advance();
+  move('card', { id: ui.choice.id, sign: +b.dataset.sign });
 });
+
+// a click here: a guest sends it to the host, everyone else plays it
+function move(name, arg) {
+  if (net.role === 'guest') sendNet({ t: 'act', to: net.host, act: name, arg });
+  else act(name, arg);
+}
+
+// a move for the seat whose turn it is, from a click here or a guest's message; anything not legal now is ignored
+function act(name, arg) {
+  const hand = G.players[G.turn].hand, plays = playsFor(hand);
+  if (name === 'pass') {
+    if (plays.length || G.deck.length) return;
+    swap(null);
+  } else {
+    const card = hand.find(c => c.id === arg?.id);
+    const fits = plays.filter(p => p.card === card && (card.kind !== 'black' || p.sign === arg.sign));
+    if (fits.length) play(fits[0]);
+    else if (card && !plays.length && G.deck.length) swap(card);
+    else return;
+  }
+  advance();
+}
 
 function showRoundEnd() {
   const r = G.result, scores = `<table class="scores">${G.players.map(p => `<tr><td>${esc(p.name)}</td><td>${p.score}</td></tr>`).join('')}</table>`;
@@ -754,23 +822,147 @@ function showRoundEnd() {
     const who = esc(G.players[r.seat].name);
     html = `<h2>${who} completes the pizza</h2><p>${r.cards} cards in the centre${r.doubled ? ', doubled by On the house' : ''}: <b>${r.pts} points</b>.</p>`;
   }
+  const guest = net.role === 'guest';
   if (G.over) {
     const w = winners().map(p => esc(p.name));
     html += `<h2>${w.length === 1 ? `${w[0]} wins` : `${w.join(' and ')} share the win`}</h2>${scores}
-      <div class="buttons"><button class="big" data-again="1">Play again</button><button data-table="1">Change the table</button></div>`;
-  } else html += `${scores}<div class="buttons"><button class="big" data-next="1">Next round</button></div>`;
+      <p><a href="${FORM}" data-form="1">Tell me how the game went</a></p>
+      ${guest ? '' : '<div class="buttons"><button class="big" data-again="1">Play again</button><button data-table="1">Change the table</button></div>'}`;
+  } else html += scores + (guest ? '<p>Waiting for the host to start the next round.</p>' : '<div class="buttons"><button class="big" data-next="1">Next round</button></div>');
   $('#roundend-sheet').innerHTML = html;
   $('#roundend').hidden = false;
 }
 
+// the form opens over the end screen; the frame loads only when first opened
+const FORM = 'https://forms.prayasabhinav.net/f/play-all-or-nothing';
+$('#form-close').addEventListener('click', () => $('#form-dialog').close());
+
 $('#roundend').addEventListener('click', e => {
+  if (e.target.closest('a[data-form]')) {
+    e.preventDefault();
+    if (!$('#form-frame').src) $('#form-frame').src = FORM;
+    return $('#form-dialog').showModal();
+  }
   const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.home) return location.assign(location.pathname);
   $('#roundend').hidden = true;
   if (b.dataset.next) { nextRound(); return advance(); }
   if (b.dataset.table) return toSetup();
-  newGame(G.players.map(p => ({ name: p.name, cpu: p.cpu })), G.mode, G.end);
+  newGame(G.players.map(p => ({ name: p.name, cpu: p.cpu, dev: p.dev })), G.mode, G.end);
   advance();
 });
+
+// ---------- separate devices ----------
+// One device hosts: it runs the game and sends each guest what that guest may see. Guests send their moves back.
+
+const RELAY = 'wss://games-relay.prayasabhinav.net/aon-';
+const net = { role: null, ws: null, id: null, host: null, code: '', guests: [], note: '' };
+
+function makeCode() {
+  const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 5 }, () => A[Math.floor(Math.random() * A.length)]).join('');
+}
+
+function connect(role, code) {
+  Object.assign(net, { role, code });
+  net.ws = new WebSocket(RELAY + code);
+  net.ws.onmessage = e => (role === 'host' ? hostHears : guestHears)(JSON.parse(e.data));
+  net.ws.onclose = () => role === 'host' ? ($('#joined').textContent = 'The connection to the relay has closed.') : hostGone('The connection to the game was lost.');
+}
+
+function sendNet(m) { if (net.ws?.readyState === 1) net.ws.send(JSON.stringify(m)); }
+
+// the host's setup, for the guests' waiting screen
+function lobby() {
+  if (net.role !== 'host' || G) return;
+  const me = setup.seats.slice(0, setup.n).find(s => !s.cpu && !s.dev);
+  sendNet({ t: 'lobby', host: me ? me.name : 'The host', guests: net.guests });
+}
+
+// what one guest may see: in Simple, only their own hand; never the order of the deck
+function viewFor(id) {
+  const open = p => G.mode === 'challenge' || p.dev === id;
+  return { ...G, deck: G.deck.map(() => 0), players: G.players.map(p => ({ ...p, hand: open(p) ? p.hand : p.hand.map(() => 0) })) };
+}
+
+function share() {
+  if (net.role === 'host') for (const g of net.guests) sendNet({ t: 'state', to: g.id, view: viewFor(g.id) });
+}
+
+function hostHears(m) {
+  if (m.t === 'welcome') net.id = m.id;
+  else if (m.t === 'hello') {
+    net.guests.push({ id: m.from, name: String(m.name).slice(0, 16) || 'Guest' });
+    net.note = '';
+    renderSetup();
+    if (G) share();
+  } else if (m.t === 'left') guestLeft(m.id);
+  else if (m.t === 'act' && G && !G.result && G.players[G.turn].dev === m.from) act(m.act, m.arg);
+}
+
+// a guest's seats pass to the computer
+function guestLeft(id) {
+  const g = net.guests.find(x => x.id === id);
+  if (!g) return;
+  net.guests = net.guests.filter(x => x !== g);
+  net.note = `${g.name} left.`;
+  for (const s of setup.seats) if (s.dev === id) Object.assign(s, { dev: null, cpu: true });
+  if (G) {
+    const theirTurn = G.players[G.turn].dev === id;
+    for (const p of G.players) if (p.dev === id) Object.assign(p, { dev: null, cpu: true });
+    G.log.unshift(`${g.name} left. The computer plays for them.`);
+    theirTurn && !G.result ? advance() : render();
+  }
+  renderSetup();
+}
+
+function guestHears(m) {
+  if (m.t === 'welcome') { net.id = m.id; sendNet({ t: 'hello', name: $('#join-name').value.trim() }); }
+  else if (m.t === 'lobby') {
+    net.host = m.from;
+    G = null;
+    const others = m.guests.filter(g => g.id !== net.id).map(g => g.name);
+    $('#join-wait').textContent = `Waiting for ${m.host} to start.${others.length ? ` Also here: ${others.join(', ')}.` : ''}`;
+    $('#table').hidden = true; $('#roundend').hidden = true; $('#join').hidden = false;
+  } else if (m.t === 'state') {
+    net.host = m.from;
+    G = m.view;
+    ui.choice = null;
+    $('#join').hidden = true; $('#table').hidden = false;
+    $('#roundend').hidden = !G.result;
+    if (G.result) showRoundEnd();
+    render();
+  } else if (m.t === 'left' && m.id === net.host) hostGone('The host has left the game.');
+}
+
+function hostGone(text) {
+  $('#roundend-sheet').innerHTML = `<h2>${text}</h2><div class="buttons"><button class="big" data-home="1">Back to setup</button></div>`;
+  $('#roundend').hidden = false;
+}
+
+$('#host').addEventListener('click', () => {
+  connect('host', makeCode());
+  $('#code').textContent = net.code;
+  $('#link').value = `${location.origin}${location.pathname}?room=${net.code}`;
+  $('#host').hidden = true; $('#host-note').hidden = true; $('#hosting').hidden = false;
+  renderSetup();
+});
+
+$('#copy').addEventListener('click', () => {
+  navigator.clipboard.writeText($('#link').value).then(() => { $('#copy').textContent = 'Copied'; }, () => $('#link').select());
+});
+
+$('#join-go').addEventListener('click', () => {
+  $('#join-form').hidden = true;
+  $('#join-wait').textContent = 'Joining…';
+  connect('guest', $('#join-code').textContent);
+});
+
+const room = new URLSearchParams(location.search).get('room');
+if (room) {
+  $('#setup').hidden = true; $('#join').hidden = false;
+  $('#join-code').textContent = room.toUpperCase();
+}
 
 renderSetup();
 $('#cover-cards').innerHTML = backSVG().repeat(4);
