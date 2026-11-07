@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>All or Nothing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #fbf8ef;
+  --blue-1: #e3eef7; --blue-2: #cfe3f2; --blue-3: #a9cbe6; --blue-4: #7fa8cc; --ink-blue: #4f7398;
+  --yellow-1: #fdf7dc; --yellow-2: #fbf1c7; --yellow-3: #f6e39a; --yellow-4: #e9cd6b;
+  --graphite: #4a4a4f; --graphite-soft: #8a8a90;
+  --head: "Caveat", "Segoe Print", cursive;
+  --body: "Patrick Hand", "Comic Sans MS", system-ui, sans-serif;
+  --wobble: 255px 14px 225px 14px / 14px 225px 14px 255px;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--paper); }
+body {
+  margin: 0; background: var(--paper); color: var(--graphite);
+  font: 18px/1.4 var(--body);
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+}
+.grain {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+main { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; padding: 12px 16px 40px; }
+header { display: flex; align-items: baseline; gap: 6px 18px; flex-wrap: wrap; }
+h1 { font: 700 clamp(2.4rem, 6vw, 3.4rem)/1 var(--head); margin: 0; color: var(--graphite); }
+h1 span { color: var(--ink-blue); }
+.tag { margin: 0; color: var(--graphite-soft); font-size: 1.1rem; }
+h2 { font: 700 2rem/1.1 var(--head); margin: 0 0 12px; }
+a { color: var(--ink-blue); }
+
+/* paper tabs */
+button, .tab {
+  font: inherit; color: var(--graphite); cursor: pointer;
+  background: var(--yellow-1); border: 1.6px solid var(--graphite); border-radius: var(--wobble);
+  padding: 6px 14px; box-shadow: 2px 3px 0 -1px rgba(74,74,79,.18);
+}
+button:hover:not(:disabled) { background: var(--yellow-2); }
+button:focus-visible { outline: 2px dashed var(--ink-blue); outline-offset: 3px; }
+button:disabled { cursor: default; opacity: .45; }
+button.big { font: 700 1.6rem/1 var(--head); padding: 10px 26px; background: var(--yellow-3); }
+button.quiet { background: transparent; box-shadow: none; border-color: var(--graphite-soft); font-size: .95rem; padding: 3px 10px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button[aria-pressed="true"] { background: var(--blue-2); border-width: 2px; }
+
+/* setup */
+.sheet {
+  margin-top: 18px; padding: 18px clamp(14px, 3vw, 28px) 22px; max-width: 720px;
+  background: rgba(253,247,220,.55); border: 1.6px solid var(--graphite); border-radius: 18px 6px 22px 8px / 8px 20px 6px 18px;
+}
+.field { display: grid; grid-template-columns: 9.5rem 1fr; gap: 8px 14px; align-items: start; margin: 14px 0; }
+.lab { font: 700 1.35rem/1.6 var(--head); }
+#seat-rows { display: grid; gap: 8px; }
+.seat-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.seat-row input {
+  font: inherit; color: var(--graphite); width: 10rem; max-width: 100%; padding: 4px 8px;
+  background: #fff8; border: none; border-bottom: 1.6px solid var(--graphite);
+}
+.ends { display: grid; gap: 8px; }
+.ends input[type=number] { font: inherit; width: 4.2rem; padding: 2px 6px; background: #fff8; border: 1.4px solid var(--graphite-soft); border-radius: 6px; }
+@media (max-width: 560px) { .field { grid-template-columns: 1fr; gap: 4px; } .seat-row { flex-wrap: nowrap; } .seat-row input { width: 8rem; } .seat-row button { padding: 6px 10px; } }
+
+/* table */
+.status { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 10px 0 6px; color: var(--graphite-soft); }
+.status .grow { flex: 1; }
+#seats { display: flex; flex-wrap: wrap; gap: 10px; }
+.seat {
+  flex: 1 1 200px; min-width: 0; padding: 8px 12px; background: rgba(227,238,247,.55);
+  border: 1.5px solid var(--graphite-soft); border-radius: 14px 5px 16px 6px / 6px 15px 5px 14px;
+}
+.seat.turn { background: var(--yellow-2); border: 2.2px solid var(--graphite); }
+.seat-top { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.seat-name { font: 700 1.45rem/1 var(--head); overflow-wrap: anywhere; }
+.seat-score { margin-left: auto; font: 700 1.45rem/1 var(--head); color: var(--ink-blue); }
+.seat-kind { font-size: .85rem; color: var(--graphite-soft); }
+.coupon { font-size: .85rem; padding: 0 6px; background: var(--blue-2); border: 1px solid var(--graphite); border-radius: 8px 3px 8px 3px; }
+.mini { display: flex; gap: 4px; margin-top: 6px; min-height: 44px; }
+.mini svg { width: 30px; height: auto; display: block; }
+
+.said { min-width: 0; }
+.board { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 10px 28px; align-items: center; margin: 8px 0; }
+#pizzas { display: flex; justify-content: center; gap: 8px; }
+#pizzas svg { width: min(330px, 86vw); height: auto; display: block; }
+#pizzas.two svg { width: min(260px, 44vw); }
+.slice .food { opacity: 0; transform: scale(.5); transform-origin: 110px 110px; transition: opacity .35s ease, transform .4s ease; }
+.slice.on .food { opacity: 1; transform: none; }
+.info { min-width: 0; }
+#said-who { margin: 0; color: var(--graphite-soft); font-size: 1.1rem; min-height: 1.5em; }
+#said-sum { margin: 0; font: 700 clamp(2.6rem, 7vw, 4.2rem)/1.05 var(--head); color: var(--graphite); min-height: 1.05em; }
+#said-note { margin: 2px 0 0; min-height: 1.4em; }
+#countline { margin: 8px 0 12px; font-size: 1.05rem; }
+#countline b { font: 700 1.6rem/1 var(--head); color: var(--ink-blue); }
+.piles { display: flex; gap: 28px; align-items: flex-end; flex-wrap: wrap; }
+.pile { position: relative; width: 104px; height: 162px; }
+.pile svg { position: absolute; left: 0; top: 0; width: 104px; height: auto; }
+.pile .arrive { animation: arrive .45s ease-out; }
+@keyframes arrive { from { transform: translate(0, 90px) rotate(0); opacity: 0; } }
+.pile-label { text-align: center; font-size: .95rem; color: var(--graphite-soft); margin: 4px -30px 0; white-space: nowrap; }
+.pile .empty { position: absolute; inset: 0; border: 1.6px dashed var(--graphite-soft); border-radius: 10px; }
+
+#hand-area { margin-top: 6px; padding: 10px 14px 14px; border-top: 1.6px solid var(--graphite-soft); min-height: 210px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 340px); gap: 14px 28px; }
+.log h3 { font: 700 1.3rem/1.2 var(--head); margin: 4px 0; }
+#log { list-style: none; padding: 0; margin: 0; max-height: 11rem; overflow: auto; font-size: 1rem; color: var(--graphite-soft); }
+#log li { margin: 2px 0; }
+#log li:first-child { color: var(--graphite); }
+#prompt { margin: 0 0 8px; font-size: 1.15rem; }
+#prompt b { font-family: var(--head); font-size: 1.5rem; }
+#hand { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+#hand .card { padding: 0; border: none; background: none; box-shadow: none; border-radius: 10px; width: clamp(66px, 20vw, 118px); transition: transform .2s ease; }
+#hand .card svg { display: block; width: 100%; height: auto; }
+#hand .card:hover:not(:disabled), #hand .card.picked { transform: translateY(-10px) rotate(-1.5deg); background: none; }
+#hand .card.picked { outline: 2px dashed var(--ink-blue); outline-offset: 2px; }
+#hand .card:disabled { opacity: .42; }
+#choice { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+#choice button { font-size: 1.1rem; }
+
+details { margin-top: 18px; }
+summary { cursor: pointer; font: 700 1.4rem/1.4 var(--head); }
+details ol, details ul { padding-left: 1.3em; margin: 6px 0; max-width: 62rem; }
+details li { margin: 4px 0; }
+footer { margin-top: 28px; padding-top: 10px; border-top: 1.4px solid var(--graphite-soft); font-size: .95rem; color: var(--graphite-soft); }
+
+.overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: rgba(251,248,239,.86); }
+.overlay.solid { background: var(--paper); }
+.cover-cards { display: flex; justify-content: center; margin: 4px 0 14px; }
+.cover-cards svg { width: 64px; height: auto; margin: 0 -10px; }
+.cover-cards svg:nth-child(1) { transform: rotate(-12deg) translateY(6px); }
+.cover-cards svg:nth-child(2) { transform: rotate(-4deg); }
+.cover-cards svg:nth-child(3) { transform: rotate(4deg); }
+.cover-cards svg:nth-child(4) { transform: rotate(12deg) translateY(6px); }
+.overlay.foot { align-items: end; background: rgba(251,248,239,.45); }
+.overlay.foot .sheet { box-shadow: 0 -6px 24px -10px rgba(74,74,79,.35); }
+.setup-wrap { display: grid; grid-template-columns: minmax(0, 720px) minmax(0, 1fr); gap: 20px; align-items: center; }
+.fan { position: relative; height: 420px; }
+.fan > svg { position: absolute; left: 50%; top: 4%; width: 300px; transform: translateX(-50%) rotate(-8deg); opacity: .9; }
+.fan-card { position: absolute; left: calc(50% - 60px); bottom: 0; width: 120px; transform-origin: 50% 160%; }
+.fan-card svg { display: block; width: 100%; height: auto; }
+.overlay .sheet { margin: 0; width: min(560px, 100%); max-height: calc(100vh - 32px); overflow: auto; background: var(--yellow-1); text-align: center; }
+.overlay p { margin: 6px 0 12px; }
+.scores { margin: 10px auto 16px; border-collapse: collapse; font-size: 1.15rem; }
+.scores td { padding: 2px 14px; border-bottom: 1px dashed var(--graphite-soft); text-align: left; }
+.scores td:last-child { text-align: right; font: 700 1.4rem/1.2 var(--head); color: var(--ink-blue); }
+.buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+@media (max-width: 960px) {
+  .setup-wrap { grid-template-columns: 1fr; }
+  .fan { display: none; }
+  #hand-area { grid-template-columns: 1fr; }
+  #log { max-height: 6.2rem; }
+}
+@media (max-width: 760px) {
+  body { font-size: 17px; }
+  h1 { font-size: 2.3rem; }
+  .tag { font-size: .95rem; }
+  .status { margin: 4px 0; font-size: .95rem; }
+  #seats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .seat { padding: 4px 8px 6px; }
+  .seat-name, .seat-score { font-size: 1.2rem; }
+  .seat-kind { display: none; }
+  .mini { min-height: 34px; margin-top: 3px; }
+  .mini svg { width: 22px; }
+  .board { grid-template-columns: 1fr; margin: 6px 0 0; }
+  #pizzas svg { width: min(230px, 62vw); }
+  #pizzas.two svg { width: min(180px, 44vw); }
+  .info { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+  #said-who { font-size: 1rem; min-height: 1.3em; }
+  #said-sum { font-size: 2.5rem; }
+  #said-note { font-size: .95rem; }
+  #countline { margin: 4px 0 0; }
+  .piles { gap: 30px; flex-wrap: nowrap; }
+  .pile, .pile svg { width: 58px; }
+  .pile { height: 90px; }
+  .pile-label { font-size: .8rem; margin: 2px -14px 0; }
+  #hand-area { padding: 8px 0 10px; min-height: 0; }
+  #hand { justify-content: center; gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<!-- shared drawing materials: the pencil wobble and the hatching -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="pencil" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="4" stroke="#4a4a4f" stroke-width="0.6" opacity="0.25"/>
+    </pattern>
+    <pattern id="crosshatch" width="3.2" height="3.2" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+      <line x1="0" y1="0" x2="0" y2="3.2" stroke="#4a4a4f" stroke-width="0.7" opacity="0.5"/>
+      <line x1="0" y1="1.6" x2="3.2" y2="1.6" stroke="#4a4a4f" stroke-width="0.5" opacity="0.3"/>
+    </pattern>
+  </defs>
+</svg>
+
+<main>
+  <header>
+    <h1>All <span>or</span> Nothing</h1>
+    <p class="tag">play a slice, win a pizza · 2 to 4 players</p>
+  </header>
+
+  <div id="setup" class="setup-wrap">
+  <section class="sheet">
+    <h2>Set the table</h2>
+    <div class="field"><span class="lab">Players</span><div class="seg" id="np"></div></div>
+    <div class="field"><span class="lab">Seats</span><div id="seat-rows"></div></div>
+    <div class="field"><span class="lab">Hands</span>
+      <div class="seg" id="mode">
+        <button data-v="simple">Simple: hands hidden</button>
+        <button data-v="challenge">Challenge: hands face up</button>
+      </div>
+    </div>
+    <div class="field"><span class="lab">The game ends</span>
+      <div class="ends">
+        <label><input type="radio" name="end" value="points" checked> when someone has <input type="number" id="end-points" value="40" min="5" max="999"> points</label>
+        <label><input type="radio" name="end" value="rounds"> after <input type="number" id="end-rounds" value="5" min="1" max="99"> rounds</label>
+      </div>
+    </div>
+    <button id="start" class="big">Deal the cards</button>
+  </section>
+  <div class="fan" id="fan" aria-hidden="true"></div>
+  </div>
+
+  <section id="table" hidden>
+    <div class="status"><span id="status"></span><span class="grow"></span><button class="quiet" id="leave">Leave the table</button></div>
+    <div id="seats"></div>
+    <div class="board">
+      <div id="pizzas" aria-hidden="true"></div>
+      <div class="info">
+        <div class="said">
+          <p id="said-who"></p>
+          <p id="said-sum" aria-live="polite"></p>
+          <p id="said-note"></p>
+          <p id="countline"></p>
+        </div>
+        <div class="piles">
+          <div><div class="pile" id="pile"></div><p class="pile-label" id="pile-label"></p></div>
+          <div><div class="pile" id="deck"></div><p class="pile-label" id="deck-label"></p></div>
+        </div>
+      </div>
+    </div>
+    <div id="hand-area">
+      <div>
+        <p id="prompt"></p>
+        <div id="hand"></div>
+        <div id="choice"></div>
+      </div>
+      <aside class="log"><h3>Last plays</h3><ol id="log"></ol></aside>
+    </div>
+  </section>
+
+  <details>
+    <summary>How to play</summary>
+    <ul>
+      <li>A 12-slice pizza is on the table and everyone wants all of it. Each player holds four cards. On your turn, play one card into the centre and take one from the deck.</li>
+      <li>Every round begins with a green card. Green cards add slices, red cards take slices away, black cards do either: you say which as you play.</li>
+      <li>The pizza never has fewer than 0 or more than 12 slices.</li>
+      <li>Whoever brings it to exactly 12 completes the pizza and scores one point for every card in the centre, so completing it early scores less.</li>
+      <li><b>Double order</b>: this round's pizza needs 24 slices. <b>On the house</b>: if you complete this round's pizza, your points are doubled; if someone else does, the coupon is wasted.</li>
+      <li>After a round the cards in the centre are shuffled back into the deck; you keep your hand.</li>
+      <li><b>Simple</b>: hands are hidden. <b>Challenge</b>: hands are face up, so you can plan ahead.</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>How this version reads the rules</summary>
+    <p>The printed rules leave some points open. This is how I read them here.</p>
+    <ol>
+      <li><b>Who opens.</b> The first seat opens the first round. After that, the player after whoever completed the last pizza opens. If nobody completed it, the player after the last opener opens.</li>
+      <li><b>No green card to open with.</b> If the opener holds no green card, the next player round the table who holds one opens, and play goes on from them. If nobody holds a green card, cards are turned from the deck until a green one appears. That card opens the pizza and the other turned cards go under the deck. The opener plays next.</li>
+      <li><b>What can be played.</b> A number card can be played only if the pizza stays between 0 and 12 slices (0 and 24 after a Double order). A black card's direction is chosen when it is played, from the directions that fit.</li>
+      <li><b>No card fits.</b> The player puts one card of their choice under the deck and takes the top card; that is their turn. If the deck is empty, they pass.</li>
+      <li><b>The deck runs out.</b> Nobody draws, and play goes on from the hands. If every player passes in a row with the deck empty, the round ends with the pizza not completed. Nobody scores, and the round still counts as a round.</li>
+      <li><b>Double order and On the house are plays.</b> Each goes into the centre and counts towards the score. Its player takes a card as usual; the slices do not change. Either can be played on any turn after the opening green card. Double order makes 24 the target for the rest of that round only.</li>
+      <li><b>On the house.</b> If the player who played it completes the pizza, they score twice the cards in the centre. If anyone else completes it, it counts as one ordinary card for them.</li>
+      <li><b>Scoring.</b> The cards in the centre include the opening card, the card that completes the pizza and any Double order or On the house card.</li>
+      <li><b>Between rounds.</b> The centre is shuffled back into the deck. Hands are kept; a hand left short because the deck ran out is filled back up to four.</li>
+      <li><b>The end.</b> The game ends after the round in which someone reaches the points target, or after the chosen number of rounds, whichever was set at the table. The highest score wins; level scores share the win.</li>
+      <li><b>Challenge mode.</b> Scoring is the same in both modes. I read the rules' "it also means more points" as rounds running longer when everyone can see what the others could play.</li>
+      <li><b>Speaking out.</b> Every number card is said in the rules' form, including the opening card ("0 + 2 = 2").</li>
+      <li><b>Computer players</b> go down this list. Complete the pizza if they can. If not, play On the house. If not, play Double order when the pizza is within 7 slices of 12. If not, play the card that leaves the others the fewest ways to complete it: in Simple they reckon from the cards they cannot see, in Challenge from the hands they can. Between cards that are equal on that, they prefer a count they could complete themselves next turn, then the larger pizza. With no card that fits, they put their highest card under the deck.</li>
+    </ol>
+  </details>
+
+  <footer>
+    All or Nothing, a card game by Prayas Abhinav, 2020, published 2022. <a href="https://github.com/prayasabhinav/games/tree/main/all-or-nothing">Rules and print files</a>.
+  </footer>
+</main>
+
+<div class="overlay solid" id="cover" hidden>
+  <div class="sheet">
+    <div class="cover-cards" id="cover-cards"></div>
+    <h2 id="cover-title"></h2>
+    <p>Hands are hidden in Simple. Pass the screen, then show the cards.</p>
+    <button class="big" id="cover-go"></button>
+  </div>
+</div>
+
+<div class="overlay foot" id="roundend" hidden>
+  <div class="sheet" id="roundend-sheet"></div>
+</div>
+
+<script>
+// ---------- the game ----------
+
+const MINUS = '−';
+const CPU_DELAY = 1000;
+let G = null;
+
+function newDeck() {
+  const deck = [];
+  const add = (kind, v, n) => { for (let i = 0; i < n; i++) deck.push({ id: deck.length, kind, v }); };
+  add('green', 1, 6); add('green', 2, 12); add('green', 3, 6);
+  for (const v of [4, 5, 6, 7]) add('black', v, 4);
+  add('red', 1, 2); add('red', 2, 2); add('red', 3, 2);
+  add('house', 0, 1); add('double', 0, 1);
+  return deck;
+}
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+function newGame(players, mode, end) {
+  G = {
+    players: players.map(p => ({ name: p.name, cpu: p.cpu, hand: [], score: 0 })),
+    mode, end, deck: shuffle(newDeck()), centre: [], count: 0, target: 12, house: null,
+    turn: 0, opener: 0, passes: 0, round: 1, said: {}, log: [], result: null, over: false,
+  };
+  startRound(0);
+}
+
+function draw(p) { if (G.deck.length) p.hand.push(G.deck.pop()); }
+
+function say(who, sum, note = '') {
+  G.said = { who, sum, note };
+  G.log.unshift([who, sum, note].filter(Boolean).join(': '));
+  if (G.log.length > 60) G.log.pop();
+}
+
+function startRound(opener) {
+  Object.assign(G, { centre: [], count: 0, target: 12, house: null, passes: 0, result: null, opener });
+  for (const p of G.players) while (p.hand.length < 4 && G.deck.length) draw(p);
+  const n = G.players.length;
+  for (let k = 0; k < n; k++) {
+    const s = (opener + k) % n;
+    if (G.players[s].hand.some(c => c.kind === 'green')) {
+      G.turn = s;
+      say('', '', k ? `Round ${G.round}. ${G.players[opener].name} holds no green card, so ${G.players[s].name} opens.`
+                    : `Round ${G.round}. ${G.players[s].name} opens with a green card.`);
+      return;
+    }
+  }
+  let c;
+  while ((c = G.deck.pop()).kind !== 'green') G.deck.unshift(c);
+  G.centre.push(c); G.count = c.v; G.turn = opener;
+  say('The deck', `0 + ${c.v} = ${c.v}`, `Round ${G.round}. Nobody holds a green card, so the deck opens.`);
+}
+
+// every legal play from a hand: {card, sign}, sign +1 adds, -1 takes away, 0 for the two special cards
+function playsFor(hand) {
+  const out = [];
+  for (const card of hand) {
+    if (!G.centre.length) { if (card.kind === 'green') out.push({ card, sign: 1 }); continue; }
+    if (card.kind === 'house' || card.kind === 'double') { out.push({ card, sign: 0 }); continue; }
+    const signs = card.kind === 'green' ? [1] : card.kind === 'red' ? [-1] : [1, -1];
+    for (const sign of signs) {
+      const n = G.count + sign * card.v;
+      if (n >= 0 && n <= G.target) out.push({ card, sign });
+    }
+  }
+  return out;
+}
+
+function play({ card, sign }) {
+  const p = G.players[G.turn];
+  p.hand.splice(p.hand.indexOf(card), 1);
+  G.centre.push(card);
+  G.passes = 0;
+  if (card.kind === 'house') { G.house = G.turn; say(p.name, 'On the house', `Points double if ${p.name} completes this pizza.`); }
+  else if (card.kind === 'double') { G.target = 24; say(p.name, 'Double order', 'This pizza now needs 24 slices.'); }
+  else {
+    const before = G.count;
+    G.count += sign * card.v;
+    say(p.name, `${before} ${sign > 0 ? '+' : MINUS} ${card.v} = ${G.count}`);
+  }
+  draw(p);
+  if (G.count === G.target) endRound(G.turn);
+  else G.turn = (G.turn + 1) % G.players.length;
+}
+
+// no card fits: swap one with the deck, or pass when the deck is empty
+function swap(card) {
+  const p = G.players[G.turn];
+  if (G.deck.length) {
+    p.hand.splice(p.hand.indexOf(card), 1);
+    G.deck.unshift(card);
+    draw(p);
+    G.passes = 0;
+    say(p.name, '', 'No card fits, so one card goes under the deck and the top card comes up.');
+  } else {
+    G.passes++;
+    say(p.name, '', 'No card fits and the deck is empty, so they pass.');
+  }
+  if (G.passes >= G.players.length) endRound(null);
+  else G.turn = (G.turn + 1) % G.players.length;
+}
+
+function endRound(seat) {
+  const cards = G.centre.length, doubled = seat !== null && G.house === seat;
+  const pts = seat === null ? 0 : cards * (doubled ? 2 : 1);
+  if (seat !== null) G.players[seat].score += pts;
+  G.result = { seat, cards, pts, doubled };
+  G.over = G.end.type === 'points' ? G.players.some(p => p.score >= G.end.n) : G.round >= G.end.n;
+}
+
+function nextRound() {
+  G.deck = shuffle(G.deck.concat(G.centre));
+  G.round++;
+  const n = G.players.length;
+  startRound(G.result.seat === null ? (G.opener + 1) % n : (G.result.seat + 1) % n);
+}
+
+function winners() {
+  const top = Math.max(...G.players.map(p => p.score));
+  return G.players.filter(p => p.score === top);
+}
+
+// ---------- the computer players ----------
+
+function completes(card, n) {
+  const gap = G.target - n;
+  return (card.kind === 'green' || card.kind === 'black') && card.v === gap;
+}
+
+// how many ways the others have to complete the pizza from n slices
+function danger(n, me) {
+  const others = G.players.filter(p => p !== me).flatMap(p => p.hand);
+  if (G.mode === 'challenge') return others.filter(c => completes(c, n)).length;
+  const unseen = G.deck.concat(others); // reckoned as a share, from what this player cannot see
+  return unseen.filter(c => completes(c, n)).length / unseen.length;
+}
+
+function cpuChoose() {
+  const me = G.players[G.turn], plays = playsFor(me.hand);
+  if (!plays.length) return null;
+  const after = p => G.count + p.sign * p.card.v;
+  const finish = plays.find(p => p.sign && after(p) === G.target);
+  if (finish) return finish;
+  const house = plays.find(p => p.card.kind === 'house');
+  if (house) return house;
+  const double = plays.find(p => p.card.kind === 'double');
+  if (double && G.target - G.count <= 7) return double;
+  const numbers = plays.filter(p => p.sign);
+  if (!numbers.length) return plays[0];
+  const setsUp = p => me.hand.some(c => c !== p.card && completes(c, after(p))) ? 0 : 1;
+  numbers.sort((a, b) => danger(after(a), me) - danger(after(b), me) || setsUp(a) - setsUp(b) || after(b) - after(a));
+  return numbers[0];
+}
+
+function cpuTurn() {
+  const choice = cpuChoose();
+  if (choice) return play(choice);
+  const hand = G.players[G.turn].hand;
+  swap(hand.reduce((a, b) => (b.v > a.v ? b : a), hand[0]));
+}
+
+// ---------- drawing ----------
+
+const C = {
+  paper: '#fbf8ef', ink: '#4a4a4f', soft: '#8a8a90', b1: '#e3eef7', b2: '#cfe3f2', b3: '#a9cbe6', b4: '#7fa8cc',
+  y1: '#fdf7dc', y2: '#fbf1c7', y3: '#f6e39a', y4: '#e9cd6b',
+  green: '#dbead2', greenLine: '#93b585', red: '#f6d8d2', redLine: '#d3a097', black: '#d3d2d0',
+  cheese: '#f8e6a4', crust: '#e3c26a', tomato: '#e9b0a5', leaf: '#bfd6ab',
+};
+
+const pt = (cx, cy, r, a) => [(cx + r * Math.sin(a * Math.PI / 180)).toFixed(1), (cy - r * Math.cos(a * Math.PI / 180)).toFixed(1)];
+
+function wedge(cx, cy, r, a0, a1) {
+  const [x0, y0] = pt(cx, cy, r, a0), [x1, y1] = pt(cx, cy, r, a1);
+  return `M${cx},${cy} L${x0},${y0} A${r},${r} 0 0 1 ${x1},${y1} Z`;
+}
+
+function crustArc(cx, cy, r, a0, a1) {
+  const [x0, y0] = pt(cx, cy, r, a0), [x1, y1] = pt(cx, cy, r, a1);
+  return `M${x0},${y0} A${r},${r} 0 0 1 ${x1},${y1}`;
+}
+
+// one slice of pizza, pencil-drawn: cheese wash, hatching, two toppings, crust, outline
+function sliceArt(cx, cy, r, a0, i) {
+  const a1 = a0 + 30, m = a0 + 15, d = wedge(cx, cy, r, a0, a1);
+  const [tx, ty] = pt(cx, cy, r * .64, m - 5 + (i % 3) * 4), [ux, uy] = pt(cx, cy, r * .4, m + 4 - (i % 2) * 7);
+  const tr = (r * .075).toFixed(1);
+  return `<path d="${d}" fill="${C.cheese}"/><path d="${d}" fill="url(#hatch)"/>
+    <circle cx="${tx}" cy="${ty}" r="${tr}" fill="${C.tomato}" stroke="${C.ink}" stroke-width=".6"/>
+    <circle cx="${ux}" cy="${uy}" r="${(tr * .8).toFixed(1)}" fill="${C.leaf}" stroke="${C.ink}" stroke-width=".6"/>
+    <path d="${crustArc(cx, cy, r * .93, a0 + 1.5, a1 - 1.5)}" fill="none" stroke="${C.crust}" stroke-width="${(r * .12).toFixed(1)}" stroke-linecap="round"/>
+    <path d="${d}" fill="none" stroke="${C.ink}" stroke-width="1.3" stroke-linejoin="round"/>`;
+}
+
+function pizzaSVG() {
+  let slices = '';
+  for (let i = 0; i < 12; i++) {
+    slices += `<g class="slice"><path d="${wedge(110, 110, 88, i * 30, i * 30 + 30)}" fill="none" stroke="${C.soft}" stroke-width="1" stroke-dasharray="3 4"/><g class="food">${sliceArt(110, 110, 88, i * 30, i)}</g></g>`;
+  }
+  return `<svg viewBox="0 0 220 220"><g filter="url(#pencil)">
+    <circle cx="110" cy="110" r="104" fill="${C.b1}" stroke="${C.ink}" stroke-width="1.6"/>
+    <circle cx="110.5" cy="110.4" r="104" fill="none" stroke="${C.ink}" stroke-width=".8" opacity=".45"/>
+    <circle cx="110" cy="110" r="95" fill="none" stroke="${C.b3}" stroke-width="1.2"/>
+    ${slices}</g></svg>`;
+}
+
+function cardName(c) {
+  return { green: `green +${c.v}`, red: `red ${MINUS}${c.v}`, black: `black ±${c.v}`, house: 'On the house', double: 'Double order' }[c.kind];
+}
+
+function cardSVG(c) {
+  const body = { green: C.green, red: C.red, black: C.black, house: C.b1, double: C.y1 }[c.kind];
+  const corner = { green: `+${c.v}`, red: `${MINUS}${c.v}`, black: `±${c.v}`, house: '2×', double: '24' }[c.kind];
+  let art = '', label = '';
+  if (c.kind === 'house') {
+    art = `<path d="M31,62 Q36,88 45,110 M57,68 Q50,90 45,110 M45,48 Q42,80 45,110" fill="none" stroke="${C.ink}" stroke-width=".8"/>
+      <ellipse cx="31" cy="50" rx="13" ry="15" fill="${C.y3}" stroke="${C.ink}" stroke-width="1.3"/>
+      <ellipse cx="58" cy="57" rx="12" ry="14" fill="${C.b3}" stroke="${C.ink}" stroke-width="1.3"/>
+      <ellipse cx="45" cy="36" rx="11" ry="13" fill="${C.y4}" stroke="${C.ink}" stroke-width="1.3"/>
+      <path d="M38,30 q3,-6 8,-6" fill="none" stroke="${C.paper}" stroke-width="1.6" stroke-linecap="round"/>`;
+    label = 'On the house';
+  } else if (c.kind === 'double') {
+    for (let i = 0; i < 12; i++) art += sliceArt(45, 72, 32, i * 30, i);
+    label = 'Double order';
+  } else {
+    const start = -c.v * 15;
+    for (let i = 0; i < c.v; i++) art += sliceArt(45, 92, 38, start + i * 30, i);
+  }
+  const blackMark = c.kind === 'black'
+    ? `<path d="M86,112 L86,136 L74,124 Z" fill="${C.green}" stroke="${C.ink}" stroke-width="1"/><path d="M62,136 L86,136 L74,124 Z" fill="${C.red}" stroke="${C.ink}" stroke-width="1"/>` : '';
+  return `<svg viewBox="0 0 90 140" role="img" aria-label="${cardName(c)}">
+    <g filter="url(#pencil)">
+      <rect x="3" y="3" width="84" height="134" rx="8" fill="${body}"/>
+      ${c.kind === 'black' ? '<rect x="3" y="3" width="84" height="134" rx="8" fill="url(#crosshatch)"/>' : ''}
+      ${art}
+      <path d="M4,4 H42 L4,42 Z" fill="${C.paper}" stroke="${C.ink}" stroke-width="1.1" stroke-linejoin="round"/>
+      ${blackMark}
+      <rect x="3" y="3" width="84" height="134" rx="8" fill="none" stroke="${C.ink}" stroke-width="1.7"/>
+      <rect x="3.6" y="3.5" width="84" height="134" rx="8" fill="none" stroke="${C.ink}" stroke-width=".7" opacity=".4"/>
+    </g>
+    <text x="7" y="22" font-family="Caveat, cursive" font-weight="700" font-size="19" fill="${C.ink}">${corner}</text>
+    ${label ? `<text x="45" y="129" text-anchor="middle" font-family="Caveat, cursive" font-weight="700" font-size="15" fill="${C.ink}">${label}</text>` : ''}
+  </svg>`;
+}
+
+function miniSVG(c) {
+  const body = { green: C.green, red: C.red, black: C.black, house: C.b1, double: C.y1 }[c.kind];
+  const mark = { green: `+${c.v}`, red: `${MINUS}${c.v}`, black: `±${c.v}`, house: '2×', double: '24' }[c.kind];
+  return `<svg viewBox="0 0 90 140" role="img" aria-label="${cardName(c)}"><g filter="url(#pencil)">
+    <rect x="3" y="3" width="84" height="134" rx="9" fill="${body}"/>
+    ${c.kind === 'black' ? '<rect x="3" y="3" width="84" height="134" rx="9" fill="url(#crosshatch)"/><circle cx="45" cy="72" r="33" fill="#fbf8ef" opacity=".85"/>' : ''}
+    <rect x="3" y="3" width="84" height="134" rx="9" fill="none" stroke="${C.ink}" stroke-width="3"/></g>
+    <text x="45" y="88" text-anchor="middle" font-family="Caveat, cursive" font-weight="700" font-size="${mark.length > 2 ? 40 : 48}" fill="${C.ink}">${mark}</text></svg>`;
+}
+
+function backSVG() {
+  return `<svg viewBox="0 0 90 140" role="img" aria-label="a card, face down"><g filter="url(#pencil)">
+    <rect x="3" y="3" width="84" height="134" rx="8" fill="${C.b2}"/>
+    <rect x="3" y="3" width="84" height="134" rx="8" fill="url(#hatch)"/>
+    <circle cx="45" cy="70" r="27" fill="${C.y2}" stroke="${C.ink}" stroke-width="1.4"/>
+    <circle cx="45" cy="70" r="21" fill="none" stroke="${C.y4}" stroke-width="3"/>
+    <rect x="3" y="3" width="84" height="134" rx="8" fill="none" stroke="${C.ink}" stroke-width="1.7"/>
+    </g><text x="45" y="77" text-anchor="middle" font-family="Caveat, cursive" font-weight="700" font-size="21" fill="${C.ink}">AON</text></svg>`;
+}
+
+// ---------- the page ----------
+
+const $ = s => document.querySelector(s);
+const ui = { timer: 0, choice: null, covered: false, shownCentre: 0 };
+const setup = {
+  n: 3, mode: 'simple',
+  seats: [{ name: 'Player 1', cpu: false }, { name: 'Computer 2', cpu: true }, { name: 'Computer 3', cpu: true }, { name: 'Computer 4', cpu: true }],
+};
+
+function renderSetup() {
+  $('#np').innerHTML = [2, 3, 4].map(n => `<button data-n="${n}" aria-pressed="${n === setup.n}">${n}</button>`).join('');
+  $('#seat-rows').innerHTML = setup.seats.slice(0, setup.n).map((s, i) => `
+    <div class="seat-row" data-i="${i}">
+      <input value="${s.name.replace(/"/g, '&quot;')}" maxlength="16" aria-label="Name for seat ${i + 1}">
+      <div class="seg"><button data-cpu="0" aria-pressed="${!s.cpu}">Person</button><button data-cpu="1" aria-pressed="${s.cpu}">Computer</button></div>
+    </div>`).join('');
+  for (const b of document.querySelectorAll('#mode button')) b.setAttribute('aria-pressed', b.dataset.v === setup.mode);
+}
+
+$('#np').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { setup.n = +b.dataset.n; renderSetup(); } });
+$('#mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { setup.mode = b.dataset.v; renderSetup(); } });
+$('#seat-rows').addEventListener('input', e => { setup.seats[e.target.closest('.seat-row').dataset.i].name = e.target.value; });
+$('#seat-rows').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const s = setup.seats[b.closest('.seat-row').dataset.i];
+  s.cpu = b.dataset.cpu === '1';
+  s.name = s.name.replace(/^(Player|Computer)(?= \d$)/, s.cpu ? 'Computer' : 'Player');
+  renderSetup();
+});
+
+$('#start').addEventListener('click', () => {
+  const type = document.querySelector('input[name=end]:checked').value;
+  const n = Math.max(1, Math.round(+$(type === 'points' ? '#end-points' : '#end-rounds').value || 1));
+  const players = setup.seats.slice(0, setup.n).map((s, i) => ({ name: s.name.trim() || `Player ${i + 1}`, cpu: s.cpu }));
+  newGame(players, setup.mode, { type, n });
+  $('#setup').hidden = true; $('#table').hidden = false;
+  advance();
+});
+
+$('#leave').addEventListener('click', toSetup);
+
+function toSetup() {
+  clearTimeout(ui.timer);
+  G = null;
+  $('#table').hidden = true; $('#roundend').hidden = true; $('#cover').hidden = true; $('#setup').hidden = false;
+}
+
+const humans = () => G.players.filter(p => !p.cpu);
+
+// whose hand is shown at the bottom: the person whose turn it is, or the only person at the table
+function viewer() {
+  const p = G.players[G.turn];
+  if (!p.cpu) return p;
+  return humans().length === 1 ? humans()[0] : null;
+}
+
+function advance() {
+  clearTimeout(ui.timer);
+  ui.choice = null;
+  ui.covered = false;
+  const p = G.players[G.turn];
+  if (G.result) showRoundEnd();
+  else if (p.cpu) ui.timer = setTimeout(() => { cpuTurn(); advance(); }, CPU_DELAY);
+  else if (G.mode === 'simple' && humans().length > 1) {
+    ui.covered = true;
+    $('#cover-title').textContent = `Pass the screen to ${p.name}`;
+    $('#cover-go').textContent = `Show ${p.name}'s cards`;
+    $('#cover').hidden = false;
+  }
+  render();
+}
+
+$('#cover-go').addEventListener('click', () => { ui.covered = false; $('#cover').hidden = true; render(); });
+
+function render() {
+  $('#status').textContent = `Round ${G.round} · ${G.end.type === 'points' ? `first to ${G.end.n} points` : `${G.end.n} rounds`} · ${G.mode === 'simple' ? 'Simple' : 'Challenge'}`;
+
+  $('#seats').innerHTML = G.players.map((p, i) => `
+    <div class="seat${i === G.turn && !G.result ? ' turn' : ''}">
+      <div class="seat-top"><span class="seat-name">${esc(p.name)}</span><span class="seat-kind">${p.cpu ? 'computer' : ''}</span>
+        ${G.house === i ? '<span class="coupon">On the house</span>' : ''}<span class="seat-score">${p.score}</span></div>
+      <div class="mini">${p.hand.map(c => G.mode === 'challenge' ? miniSVG(c) : backSVG()).join('')}</div>
+    </div>`).join('');
+
+  const box = $('#pizzas'), pizzas = G.target / 12;
+  if (box.children.length !== pizzas) { box.innerHTML = pizzaSVG().repeat(pizzas); box.classList.toggle('two', pizzas === 2); }
+  box.querySelectorAll('.slice').forEach((s, i) => s.classList.toggle('on', i < G.count));
+
+  $('#said-who').textContent = G.said.who;
+  $('#said-sum').textContent = G.said.sum;
+  $('#said-note').textContent = G.said.note;
+  $('#countline').innerHTML = `<b>${G.count}</b> of ${G.target} slices`;
+
+  const top = G.centre.slice(-5), fresh = G.centre.length > ui.shownCentre;
+  $('#pile').innerHTML = top.length ? top.map((c, i) => {
+    const turn = (c.id * 37) % 15 - 7, shift = (c.id * 13) % 9 - 4;
+    const arrive = fresh && i === top.length - 1 ? ' class="arrive"' : '';
+    return `<div style="position:absolute;inset:0;transform:translate(${shift}px,0) rotate(${turn}deg)"><div${arrive}>${cardSVG(c)}</div></div>`;
+  }).join('') : '<div class="empty"></div>';
+  ui.shownCentre = G.centre.length;
+  $('#pile-label').textContent = `${G.centre.length} in the centre`;
+  $('#deck').innerHTML = G.deck.length ? backSVG() : '<div class="empty"></div>';
+  $('#deck-label').textContent = `${G.deck.length} in the deck`;
+
+  renderHand();
+  $('#log').innerHTML = G.log.map(l => `<li>${esc(l)}</li>`).join('');
+}
+
+function renderHand() {
+  const me = viewer(), cur = G.players[G.turn];
+  const mine = me === cur && !G.result && !ui.covered;
+  const plays = mine ? playsFor(me.hand) : [];
+  let prompt;
+  if (G.result) prompt = '';
+  else if (ui.covered) prompt = `Waiting for <b>${esc(cur.name)}</b>.`;
+  else if (!mine) prompt = `<b>${esc(cur.name)}</b> is choosing a card…`;
+  else if (!plays.length) prompt = G.deck.length
+    ? `<b>${esc(me.name)}</b>, no card fits. Choose one to put under the deck; you take the top card.`
+    : `<b>${esc(me.name)}</b>, no card fits and the deck is empty.`;
+  else prompt = G.centre.length ? `<b>${esc(me.name)}</b>, play a card.` : `<b>${esc(me.name)}</b>, open the pizza with a green card.`;
+  $('#prompt').innerHTML = prompt;
+
+  const show = me && !ui.covered;
+  const order = { green: 0, red: 1, black: 2, house: 3, double: 4 };
+  const hand = show ? [...me.hand].sort((a, b) => order[a.kind] - order[b.kind] || a.v - b.v) : [];
+  const swapping = mine && !plays.length && G.deck.length;
+  $('#hand').innerHTML = hand.map(c => {
+    const ok = swapping || plays.some(p => p.card === c);
+    return `<button class="card${ui.choice === c ? ' picked' : ''}" data-id="${c.id}" ${mine && ok ? '' : 'disabled'} aria-label="${cardName(c)}">${cardSVG(c)}</button>`;
+  }).join('');
+
+  let choice = '';
+  if (mine && !plays.length && !G.deck.length) choice = '<button data-pass="1">Pass</button>';
+  else if (ui.choice) {
+    const c = ui.choice;
+    choice = [1, -1].map(sign => {
+      const n = G.count + sign * c.v, ok = n >= 0 && n <= G.target;
+      return `<button data-sign="${sign}" ${ok ? '' : 'disabled'}>${sign > 0 ? `Add ${c.v}: ${ok ? `${G.count} + ${c.v} = ${n}` : 'too many slices'}` : `Take away ${c.v}: ${ok ? `${G.count} ${MINUS} ${c.v} = ${n}` : 'too few slices'}`}</button>`;
+    }).join('') + '<button class="quiet" data-cancel="1">Another card</button>';
+  }
+  $('#choice').innerHTML = choice;
+}
+
+function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch])); }
+
+$('#hand').addEventListener('click', e => {
+  const b = e.target.closest('button.card'); if (!b || b.disabled) return;
+  const hand = G.players[G.turn].hand, card = hand.find(c => c.id === +b.dataset.id);
+  const plays = playsFor(hand).filter(p => p.card === card);
+  if (!plays.length) { swap(card); return advance(); }
+  if (card.kind === 'black') { ui.choice = card; return renderHand(); }
+  play(plays[0]); advance();
+});
+
+$('#choice').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || b.disabled) return;
+  if (b.dataset.pass) { swap(null); return advance(); }
+  if (b.dataset.cancel) { ui.choice = null; return renderHand(); }
+  play({ card: ui.choice, sign: +b.dataset.sign }); advance();
+});
+
+function showRoundEnd() {
+  const r = G.result, scores = `<table class="scores">${G.players.map(p => `<tr><td>${esc(p.name)}</td><td>${p.score}</td></tr>`).join('')}</table>`;
+  let html;
+  if (r.seat === null) html = `<h2>Nobody completes the pizza</h2><p>The deck is empty and every player passed. Nobody scores this round.</p>`;
+  else {
+    const who = esc(G.players[r.seat].name);
+    html = `<h2>${who} completes the pizza</h2><p>${r.cards} cards in the centre${r.doubled ? ', doubled by On the house' : ''}: <b>${r.pts} points</b>.</p>`;
+  }
+  if (G.over) {
+    const w = winners().map(p => esc(p.name));
+    html += `<h2>${w.length === 1 ? `${w[0]} wins` : `${w.join(' and ')} share the win`}</h2>${scores}
+      <div class="buttons"><button class="big" data-again="1">Play again</button><button data-table="1">Change the table</button></div>`;
+  } else html += `${scores}<div class="buttons"><button class="big" data-next="1">Next round</button></div>`;
+  $('#roundend-sheet').innerHTML = html;
+  $('#roundend').hidden = false;
+}
+
+$('#roundend').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  $('#roundend').hidden = true;
+  if (b.dataset.next) { nextRound(); return advance(); }
+  if (b.dataset.table) return toSetup();
+  newGame(G.players.map(p => ({ name: p.name, cpu: p.cpu })), G.mode, G.end);
+  advance();
+});
+
+renderSetup();
+$('#cover-cards').innerHTML = backSVG().repeat(4);
+$('#fan').innerHTML = pizzaSVG() + [{ kind: 'green', v: 2 }, { kind: 'red', v: 3 }, { kind: 'black', v: 5 }, { kind: 'house', v: 0 }, { kind: 'double', v: 0 }]
+  .map((c, i) => `<div class="fan-card" style="transform:rotate(${(i - 2) * 11}deg) translateY(${Math.abs(i - 2) * 9}px)">${cardSVG(c)}</div>`).join('');
+$('#fan').querySelectorAll('.slice').forEach((s, i) => s.classList.toggle('on', i < 7));
+</script>
+</body>
+</html>

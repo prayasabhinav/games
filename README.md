@@ -41,6 +41,10 @@ You also need a four-sided die and a phone to time each move.
 
 The board, 53 cards in English and in Gujarati, objection tokens, the rules, and the card texts with the file that builds them. See [`matbhed/README.md`](matbhed/README.md).
 
+## Play in a browser
+
+Each game can also be played on one screen, free and with no sign-in: [3 Quarters](https://prayasabhinav.github.io/games/3-quarters/play/), [All or Nothing](https://prayasabhinav.github.io/games/all-or-nothing/play/) and [Matbhed](https://prayasabhinav.github.io/games/matbhed/play/). In 3 Quarters and All or Nothing a seat can be played by the computer. Each page lists, under *How this version reads the rules*, where the written rules left something open and what the page does there.
+
 ## Licence
 
 3 Quarters and Matbhed are under Creative Commons Attribution 4.0. All or Nothing carries no licence.

@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Matbhed</title>
+<link rel="icon" href="data:,">
+<meta name="description" content="Play Matbhed on one screen: a maze, a die, and cards about Article 25 of the Constitution of India, the freedom of religion.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Patrick+Hand&family=Baloo+Bhai+2:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #fbf8ef;
+  --blue-1: #e3eef7; --blue-2: #cfe3f2; --blue-3: #a9cbe6; --blue-4: #7fa8cc; --ink-blue: #4f7398;
+  --yellow-1: #fdf7dc; --yellow-2: #fbf1c7; --yellow-3: #f6e39a; --yellow-4: #e9cd6b;
+  --graphite: #4a4a4f; --graphite-soft: #8a8a90;
+  /* the card colours as pencil washes */
+  --red-box: #f0c2b6; --yellow-box: #f3df8c; --green-box: #c6e0b1;
+  --red-card: #f8e0d8; --yellow-card: #fbf0c4; --green-card: #e2efd6;
+  --hand: "Caveat", "Patrick Hand", cursive;
+  --body: "Patrick Hand", "Comic Sans MS", system-ui, sans-serif;
+  --gu: "Baloo Bhai 2", "Noto Sans Gujarati", "Gujarati Sangam MN", system-ui, sans-serif;
+  --tab: 255px 14px 225px 16px / 16px 225px 14px 255px;
+}
+* { box-sizing: border-box; }
+html { background: var(--paper); color-scheme: light; }
+body {
+  margin: 0;
+  padding: 0 16px;
+  background: var(--paper);
+  color: var(--graphite);
+  font: 1.15rem/1.45 var(--body);
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  opacity: .06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+[hidden] { display: none !important; }
+
+header {
+  display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between;
+  gap: 8px 24px;
+  max-width: 1500px; margin: 0 auto;
+  padding: 18px 0 14px;
+}
+h1 { margin: 0; font: 700 2.9rem/1 var(--hand); color: var(--ink-blue); }
+h1 span { font: 500 1.5rem var(--gu); color: var(--graphite-soft); margin-left: .4em; }
+header p { margin: 4px 0 0; color: var(--graphite-soft); }
+h2 { margin: 0 0 12px; font: 700 2rem/1.1 var(--hand); color: var(--ink-blue); }
+h3 { margin: 0; font: 600 1.6rem/1.1 var(--hand); }
+
+/* pencil-outlined paper tabs */
+button, .tab {
+  font: inherit; color: var(--graphite);
+  background: var(--yellow-1);
+  border: 1.6px solid var(--graphite);
+  border-radius: var(--tab);
+  padding: .3em .9em;
+  cursor: pointer;
+  position: relative;
+}
+button::after {
+  content: ""; position: absolute; inset: -3px 1px 1px -2px;
+  border: 1px solid var(--graphite-soft); border-radius: 15px 225px 16px 255px / 255px 16px 225px 14px;
+  opacity: .55; pointer-events: none;
+}
+button:hover { background: var(--yellow-2); }
+button:focus-visible { outline: 2px dashed var(--ink-blue); outline-offset: 4px; }
+button[aria-pressed="true"] { background: var(--blue-2); }
+button:disabled { opacity: .45; cursor: default; }
+button.go { background: var(--blue-2); font-size: 1.35rem; padding: .35em 1.3em; }
+button.go:hover { background: var(--blue-3); }
+
+.sheet {
+  background: var(--yellow-1);
+  border: 1.6px solid var(--graphite);
+  border-radius: 4px 14px 6px 12px / 12px 6px 14px 4px;
+  padding: 20px 22px;
+  box-shadow: 3px 4px 0 rgba(74, 74, 79, .12);
+}
+
+.langs { display: flex; gap: 8px; align-items: center; }
+.langs button[data-arg="gujarati"] { font-family: var(--gu); }
+
+/* setup */
+#setup { max-width: 640px; margin: 10px auto 40px; }
+#names { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+#names li { display: flex; gap: 8px; align-items: center; }
+#names .swatch { flex: none; }
+input[type="text"], input[type="number"], select {
+  font: inherit; color: var(--graphite);
+  background: #fffdf6;
+  border: 1.4px solid var(--graphite-soft);
+  border-radius: 3px 8px 4px 9px;
+  padding: .2em .5em;
+  min-width: 0;
+}
+#names input { flex: 1; }
+#judge { flex: 1; cursor: pointer; }
+.field { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin: 18px 0 4px; }
+.field label { font: 600 1.45rem var(--hand); }
+.field input[type="number"] { width: 5em; }
+.field input[type="text"] { flex: 1 1 14em; }
+.hint { margin: 2px 0 0; color: var(--graphite-soft); font-size: 1rem; }
+.err { color: #9a4a3a; }
+.start { margin-top: 22px; display: flex; justify-content: flex-end; }
+
+/* game */
+#game {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(300px, 500px);
+  gap: 24px 32px;
+  justify-content: center;
+  align-items: start;
+  max-width: 1500px; margin: 0 auto 32px;
+}
+.boardbox { width: min(calc((100vh - 130px) * 644 / 694), 58vw); }  /* the board is 644 × 694 in its own units */
+#board { display: block; width: 100%; height: auto; }
+aside { display: grid; gap: 18px; }
+
+.dots { stroke: var(--graphite-soft); stroke-width: .9; stroke-dasharray: 1.5 4.5; stroke-linecap: round; fill: none; }
+.walls path { stroke: var(--graphite); stroke-width: 3.4; stroke-linecap: round; fill: none; }
+.box { stroke: var(--graphite); stroke-width: .8; }
+.box.red { fill: var(--red-box); } .box.yellow { fill: var(--yellow-box); } .box.green { fill: var(--green-box); }
+.mark { font: 600 15px var(--hand); fill: var(--graphite-soft); }
+.piece { transition: transform .16s ease-out; }
+.piece circle { stroke: var(--graphite); stroke-width: 1.4; }
+.piece text { font: 12px var(--body); fill: var(--graphite); text-anchor: middle; dominant-baseline: central; }
+.piece .ring { fill: none; stroke: var(--ink-blue); stroke-width: 1.4; stroke-dasharray: 3 3; }
+.hint-arrow { cursor: pointer; }
+.hint-arrow circle { fill: var(--blue-2); stroke: var(--ink-blue); stroke-width: 1.2; }
+.hint-arrow text { font: 15px var(--body); fill: var(--ink-blue); text-anchor: middle; dominant-baseline: central; }
+.hint-arrow:hover circle { fill: var(--blue-3); }
+
+#panel { min-height: 240px; }
+.who { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+.note { margin: 0 0 12px; color: var(--graphite-soft); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+.die { width: 64px; height: 64px; display: block; }
+.die rect { fill: #fffdf6; stroke: var(--graphite); stroke-width: 2; }
+.die circle { fill: var(--graphite); }
+.dicebtn { padding: 6px; border-radius: 12px 16px 10px 14px; background: #fffdf6; }
+.dicebtn::after { border-radius: 14px 10px 16px 12px; }
+.tumble .die { animation: tumble .4s ease-out; }
+@keyframes tumble { 0% { transform: rotate(-200deg) scale(.8); } 70% { transform: rotate(14deg); } 100% { transform: none; } }
+.dirs button { font-size: 1.3rem; min-width: 4.6em; }
+
+.card {
+  margin: 4px 0 12px;
+  padding: 18px 20px 20px;
+  border: 1.8px solid var(--graphite);
+  border-radius: 6px 12px 8px 14px / 14px 8px 12px 6px;
+  position: relative;
+  animation: flip .45s ease-out;
+}
+@keyframes flip { from { transform: perspective(700px) rotateY(80deg); opacity: .3; } to { transform: none; opacity: 1; } }
+.card.red { background: var(--red-card); } .card.yellow { background: var(--yellow-card); } .card.green { background: var(--green-card); }
+.card::before {
+  content: ""; position: absolute; right: 0; top: 0; width: 70px; height: 70px;
+  background: repeating-linear-gradient(135deg, transparent 0 5px, rgba(74, 74, 79, .2) 5px 6px);
+  border-radius: 0 12px 0 0;
+}
+.card h3 { position: relative; margin-bottom: 8px; }
+.card p { margin: 0; font-size: 1.45rem; line-height: 1.4; position: relative; }
+body.gu .card p { font-family: var(--gu); font-size: 1.35rem; line-height: 1.6; }
+.cardroll { display: flex; align-items: center; gap: 10px; margin-top: 6px; color: var(--graphite-soft); font-size: 1rem; }
+.cardroll .die { width: 40px; height: 40px; }
+.scorebtns { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 8px; }
+.scorebtns button { font: 700 1.6rem var(--hand); padding: .1em 0; }
+
+.swatch {
+  display: inline-grid; place-items: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1.5px solid var(--graphite);
+  font-size: .95rem;
+  flex: none;
+}
+#scores table { width: 100%; border-collapse: collapse; }
+#scores th { font: 600 1.15rem var(--hand); text-align: left; color: var(--graphite-soft); padding: 0 4px 4px; }
+#scores td { padding: 6px 4px; border-top: 1px dashed var(--blue-3); vertical-align: middle; }
+#scores tr.now td { background: var(--blue-1); }
+#scores .name { display: flex; gap: 8px; align-items: center; }
+.tokens { white-space: nowrap; }
+.tokens i { display: inline-block; width: 12px; height: 12px; margin-right: 3px; border-radius: 50%; border: 1.3px solid var(--graphite); }
+.tokens i.full { background: var(--graphite-soft); }
+.status { font-size: .95rem; color: var(--graphite-soft); }
+.status.ok { color: var(--ink-blue); }
+
+#end { max-width: 640px; margin: 10px auto 40px; }
+#end ol { padding-left: 1.4em; }
+#end li { margin: 6px 0; }
+
+details.readings { max-width: 900px; margin: 24px auto 0; }
+details.readings summary { cursor: pointer; font: 700 1.6rem var(--hand); color: var(--ink-blue); }
+details.readings ol { margin: 10px 0 0; padding-left: 1.3em; }
+details.readings li { margin: 6px 0; }
+footer { max-width: 900px; margin: 0 auto; padding: 24px 0 calc(40px + env(safe-area-inset-bottom, 0px)); color: var(--graphite-soft); font-size: 1rem; }
+footer a { color: var(--ink-blue); }
+
+@media (max-width: 900px) {
+  #game { grid-template-columns: minmax(0, 1fr); }
+  .boardbox { width: 100%; }
+  h1 { font-size: 2.4rem; }
+  .card p { font-size: 1.3rem; }
+  .sheet { padding: 16px 14px; }
+  .scorebtns { gap: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .piece, .tumble .die, .card { transition: none; animation: none; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="pencil" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="2" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="4" stroke="#4a4a4f" stroke-width=".7" opacity=".25"/>
+  </pattern>
+</svg>
+
+<header>
+  <div>
+    <h1>Matbhed <span>મતભેદ · मतभेद</span></h1>
+    <p>A board game about Article 25 of the Constitution of India, the freedom of religion.</p>
+  </div>
+  <div class="langs" role="group" aria-label="Language of the cards">
+    <span>Cards in</span>
+    <button type="button" data-act="lang" data-arg="english" aria-pressed="true">English</button>
+    <button type="button" data-act="lang" data-arg="gujarati" aria-pressed="false">ગુજરાતી</button>
+  </div>
+</header>
+
+<main>
+  <section id="setup" class="sheet">
+    <h2>Who is playing</h2>
+    <ol id="names"></ol>
+    <button type="button" data-act="add" id="addBtn">Add a player</button>
+    <p class="hint">2 to 16 players, on this one screen.</p>
+    <div class="field">
+      <label for="need">Points to exit</label>
+      <input id="need" type="number" min="25" max="100" value="25">
+    </div>
+    <p class="hint">Anywhere from 25 to 100. A player needs this many points before the exit lets them out.</p>
+    <div class="field">
+      <label for="judge">The Judge</label>
+      <select id="judge"></select>
+    </div>
+    <p class="hint">The Judge scores every answer from 1 to 7 and rules on objections. The game says who judges each time.</p>
+    <p class="err" id="err" hidden></p>
+    <div class="start"><button type="button" class="go" data-act="start">Start</button></div>
+  </section>
+
+  <section id="game" hidden>
+    <div class="boardbox"><svg id="board" viewBox="-22 -46 644 694" role="img" aria-label="The maze, 15 squares by 15"></svg></div>
+    <aside>
+      <div id="panel" class="sheet" aria-live="polite"></div>
+      <div id="scores" class="sheet"></div>
+    </aside>
+  </section>
+
+  <section id="end" class="sheet" hidden></section>
+</main>
+
+<details class="readings">
+  <summary>How this version reads the rules</summary>
+  <ol>
+    <li>Every counter starts on the square just inside the entrance, which is the gap in the bottom wall. The gap behind that square counts as a wall, so nobody leaves by the way in.</li>
+    <li>A roll is used in full; a counter cannot stop short. When a wall is in front of it with steps still to go, the player chooses again from every open direction, including back the way they came.</li>
+    <li>The exit is the gap under the crown. For a player without the points needed, it counts as a wall. A player with the points who moves through it leaves the maze at once, and any steps left over go unused.</li>
+    <li>A card is drawn only when a move ends on a coloured box; passing over one draws nothing. A box is never used up: landing on it again draws the next card of its colour.</li>
+    <li>Each colour's cards are shuffled at the start. When a colour runs out, its cards are shuffled and used again.</li>
+    <li>Counters may share a square.</li>
+    <li>The Judge is chosen from a list: all the players together, one of the players, or someone not playing. When all the players judge, everyone except the player who gave an answer scores it. Everyone except the answerer and the objector rules on an objection.</li>
+    <li>If the Judge is one of the players, the other players together score the Judge's own answers and rule on objections to them. A player who is the Judge does not object, since the Judge rules on objections.</li>
+    <li>An objection is raised after the Judge has scored the answer. It costs the objector one token whatever the ruling, and the objector then gives their own answer.</li>
+    <li>A valid objection moves the points that answer earned from the player who answered to the objector. No more objections can be made to that answer. An objection that is not valid costs the objector 2 points (never below 0), and other players may still object to the same answer.</li>
+    <li>Only players still in the maze, with tokens left, can object. A player who has left keeps their points as they stand.</li>
+    <li>Points are checked at the exit. A player whose points fell below the mark through an objection must earn them back before the exit lets them out.</li>
+    <li>A card that asks for another roll uses the small die beside the card, which moves nobody.</li>
+    <li>The first player to leave the maze wins. Play goes on until everyone has left, and the last screen lists the order in which they left.</li>
+  </ol>
+</details>
+
+<footer>
+  <a href="../">Matbhed</a>, 2023, designed by Prayas Abhinav and Jaskaran Singh for Conflictorium's Re-Art25 project, Ahmedabad. Under <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 (CC BY 4.0)</a>. The game reads its cards from the text files in <a href="../cards/">cards/</a>, so a change to those files changes the cards in play.
+</footer>
+
+<script>
+// The board, digitised from matbhed-board.jpg: one hex digit per square for its walls (N=1, E=2, S=4, W=8),
+// one letter per square for its box (r red, y yellow, g green, . none). Row 0 is the top, under the crown.
+const WALLS = ["95151796917953b", "a907a9292c3ab82", "aaabc6c6c7c6c2a", "c2c2d151579552a", "9456947c1543bc6", "a91547d3c53c453", "c6c79552954393a", "95550392ebb86c2", "8393aaea96c453a", "ac6aac3c439556a", "ad16c3c516c3d56", "c3c516d52b96d53", "9693a953c469152", "c12c447c513ae92", "d6c55553d6c456e"];
+const BOXES = ["gr..y...rg.y..g", "ry..g..y.ryrg..", "gryg.ryg......y", "rg....yrgr....g", "..rgyr...gr..yr", "g...rgryr..g...", ".ygry.yg.gr....", "..gyr...ygyrg..", ".gyrgyrg....ry.", "yr.gy..ygr.y..r", "..y.r..ryg.gy..", "y.g..r.ygy.rg..", ".....yr..g..y.r", "...ygr.gr...rgy", "ry.ryg..g.gy.rg"];
+
+const N = 15, CELL = 40, ENTRY = { r: 14, c: 7 }, EXIT = { r: 0, c: 7 };
+const BIT = { N: 1, E: 2, S: 4, W: 8 };
+const MOVE = { N: [-1, 0], E: [0, 1], S: [1, 0], W: [0, -1] };
+const ARROW = { N: "↑", E: "→", S: "↓", W: "←" };
+const DIRNAME = { N: "up", E: "right", S: "down", W: "left" };
+const COLOUR = { r: "red", y: "yellow", g: "green" };
+const INVALID_OBJECTION_COST = 2;
+const STEP_MS = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 170;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const hue = i => `hsl(${(i * 137.5 + 200) % 360} 55% 84%)`;
+const swatch = i => `<span class="swatch" style="background:${hue(i)}">${i + 1}</span>`;
+
+const cards = {};          // language -> { red: [...], yellow: [...], green: [...] }
+let lang = "english";
+let G = null;              // the game in progress
+
+// ---------- cards ----------
+async function loadCards(l) {
+  if (cards[l]) return;
+  const res = await fetch(`../cards/matbhed-cards-${l}.txt`);
+  if (!res.ok) throw new Error(res.status);
+  const out = {};
+  let colour;
+  for (const para of (await res.text()).split(/\n\s*\n/)) {
+    const t = para.trim();
+    if (!t) continue;
+    if (t.startsWith("# ")) out[colour = t.slice(2).trim()] = [];
+    else out[colour].push(t.replace(/\s*\n\s*/g, " "));
+  }
+  cards[l] = out;
+}
+function shuffled(n) {
+  const a = [...Array(n).keys()];
+  for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function draw(colour) {
+  if (!G.decks[colour].length) G.decks[colour] = shuffled(cards[lang][colour].length);
+  return G.decks[colour].pop();
+}
+const cardText = () => { const list = cards[lang][G.card.colour]; return list[G.card.index % list.length]; };
+
+// ---------- setup ----------
+function nameRow(value = "") {
+  const li = document.createElement("li");
+  li.innerHTML = `<span class="swatch"></span><input type="text" maxlength="24" aria-label="Player name"><button type="button" data-act="remove" aria-label="Remove this player">remove</button>`;
+  li.querySelector("input").value = value;
+  $("#names").append(li);
+  numberRows();
+}
+function judgeOptions() {
+  const sel = $("#judge"), keep = sel.value;
+  const names = [...$("#names").querySelectorAll("input")].map((inp, i) => inp.value.trim() || `Player ${i + 1}`);
+  sel.innerHTML = `<option value="all">All the players together</option>`
+    + names.map((n, i) => `<option value="${i}">${esc(n)}</option>`).join("")
+    + `<option value="outside">Someone not playing</option>`;
+  sel.value = [...sel.options].some(o => o.value === keep) ? keep : "all";
+}
+function numberRows() {
+  const rows = [...$("#names").children];
+  rows.forEach((li, i) => {
+    const s = li.querySelector(".swatch");
+    s.textContent = i + 1; s.style.background = hue(i);
+    li.querySelector("input").placeholder = `Player ${i + 1}`;
+    li.querySelector("button").hidden = rows.length <= 2;
+  });
+  $("#addBtn").disabled = rows.length >= 16;
+  judgeOptions();
+}
+
+async function start() {
+  try { await loadCards(lang); }
+  catch { const e = $("#err"); e.hidden = false; e.textContent = "The cards could not be loaded. Open this page through a web server, so it can read ../cards/."; return; }
+  const need = Math.min(100, Math.max(25, Math.round(+$("#need").value) || 25));
+  $("#need").value = need;
+  const players = [...$("#names").querySelectorAll("input")].map((inp, i) => ({
+    name: inp.value.trim() || `Player ${i + 1}`, r: ENTRY.r, c: ENTRY.c, pts: 0, tokens: 3, left: false,
+  }));
+  G = {
+    players, need, judge: $("#judge").value,
+    turn: 0, phase: "roll", roll: 0, steps: 0, dir: null, note: "Everyone starts just inside the entrance.",
+    card: null, answer: 0, objector: null, cardDie: 0, leftOrder: [],
+    decks: { red: [], yellow: [], green: [] },
+  };
+  $("#setup").hidden = true; $("#end").hidden = true; $("#game").hidden = false;
+  drawBoard();
+  render();
+}
+
+// ---------- the board ----------
+const wallsAt = (r, c) => parseInt(WALLS[r][c], 16);
+function canGo(p, d) {
+  if (wallsAt(p.r, p.c) & BIT[d]) return false;
+  if (p.r === ENTRY.r && p.c === ENTRY.c && d === "S") return false;
+  if (p.r === EXIT.r && p.c === EXIT.c && d === "N") return p.pts >= G.need;
+  return true;
+}
+const openDirs = p => Object.keys(MOVE).filter(d => canGo(p, d));
+
+function drawBoard() {
+  let walls = "", dots = "", boxes = "";
+  const seg = (x1, y1, x2, y2) => `M${x1} ${y1}L${x2} ${y2}`;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const w = wallsAt(r, c), x = c * CELL, y = r * CELL;
+    if (r === 0 && w & 1) walls += seg(x, y, x + CELL, y);
+    if (c === 0 && w & 8) walls += seg(x, y, x, y + CELL);
+    if (w & 2) walls += seg(x + CELL, y, x + CELL, y + CELL); else if (c < N - 1) dots += seg(x + CELL, y, x + CELL, y + CELL);
+    if (w & 4) walls += seg(x, y + CELL, x + CELL, y + CELL); else if (r < N - 1) dots += seg(x, y + CELL, x + CELL, y + CELL);
+    const b = BOXES[r][c];
+    if (b !== ".") boxes += `<rect class="box ${COLOUR[b]}" x="${x + 12}" y="${y + 12}" width="16" height="16" rx="1"/><rect x="${x + 12}" y="${y + 12}" width="16" height="16" fill="url(#hatch)"/>`;
+  }
+  const cx = EXIT.c * CELL + CELL / 2;
+  $("#board").innerHTML = `
+    <path class="dots" d="${dots}"/>
+    <g filter="url(#pencil)">${boxes}</g>
+    <g class="walls" filter="url(#pencil)"><path d="${walls}"/><path d="${walls}" transform="translate(.6 .5)" opacity=".45"/></g>
+    <g filter="url(#pencil)" transform="translate(${cx} -16)" fill="var(--yellow-3)" stroke="var(--graphite)" stroke-width="1.4" stroke-linejoin="round">
+      <path d="M-14 8 L-15 -6 L-7 1 L0 -11 L7 1 L15 -6 L14 8 Z"/><path d="M-14 12 H14" fill="none"/>
+    </g>
+    <text class="mark" x="${cx + 26}" y="-14">exit</text>
+    <text class="mark" x="${cx}" y="${N * CELL + 22}" text-anchor="middle">in</text>
+    <g id="pieces"></g><g id="arrows"></g>`;
+  $("#pieces").innerHTML = G.players.map((p, i) =>
+    `<g class="piece" data-i="${i}"><circle r="12" fill="${hue(i)}" filter="url(#pencil)"/><circle class="ring" r="16"/><text>${i + 1}</text></g>`).join("");
+}
+
+function placePieces() {
+  const groups = {};
+  G.players.forEach((p, i) => { if (!p.left) (groups[p.r * N + p.c] ??= []).push(i); });
+  G.players.forEach((p, i) => {
+    const g = $(`.piece[data-i="${i}"]`);
+    g.style.display = p.left ? "none" : "";
+    if (p.left) return;
+    const here = groups[p.r * N + p.c], k = here.length, j = here.indexOf(i);
+    const a = (2 * Math.PI * j) / k - Math.PI / 2, off = k === 1 ? 0 : k < 6 ? 9 : 14, rad = k === 1 ? 12 : k < 6 ? 8 : 5.5;
+    const x = p.c * CELL + CELL / 2 + off * Math.cos(a), y = p.r * CELL + CELL / 2 + off * Math.sin(a);
+    g.style.transform = `translate(${x}px, ${y}px)`;
+    g.querySelector("circle").setAttribute("r", rad);
+    g.querySelector("text").style.fontSize = `${rad}px`;
+    g.querySelector(".ring").setAttribute("r", rad + 3.5);
+    g.querySelector(".ring").style.display = i === G.turn ? "" : "none";
+    if (i === G.turn) g.parentNode.append(g); // current counter on top
+  });
+  const p = G.players[G.turn];
+  $("#arrows").innerHTML = G.phase !== "dir" ? "" : openDirs(p).map(d => {
+    const x = p.c * CELL + CELL / 2 + MOVE[d][1] * 30, y = p.r * CELL + CELL / 2 + MOVE[d][0] * 30;
+    return `<g class="hint-arrow" data-act="dir" data-arg="${d}" transform="translate(${x} ${y})"><circle r="10"/><text>${ARROW[d]}</text></g>`;
+  }).join("");
+}
+
+// ---------- a turn ----------
+const cur = () => G.players[G.turn];
+const inMaze = () => G.players.filter(p => !p.left);
+const judgeIsPlayer = () => /^\d+$/.test(G.judge);
+const canObject = () => G.players.map((p, i) => i).filter(i => i !== G.turn && !G.players[i].left && G.players[i].tokens > 0
+  && !(judgeIsPlayer() && i === +G.judge));
+// Who judges right now: the answer's scorer, or (with an objector) the one who rules.
+function judgeNow() {
+  const others = [G.turn, G.objector].filter(i => i != null).map(i => G.players[i].name);
+  const except = `the other players together (not ${others.map(esc).join(" or ")})`;
+  if (G.judge === "outside") return "the Judge";
+  if (G.judge === "all") return except;
+  return +G.judge === G.turn ? except : esc(G.players[+G.judge].name);
+}
+const judgeLabel = () => G.judge === "outside" ? "someone not playing" : G.judge === "all" ? "all the players together" : esc(G.players[+G.judge].name);
+
+function roll() {
+  G.phase = "rolling"; render();
+  setTimeout(() => {
+    G.roll = G.steps = 1 + Math.floor(Math.random() * 6);
+    G.phase = "dir"; G.note = ""; render();
+  }, STEP_MS ? 400 : 0);
+}
+function choose(d) {
+  if (G.phase !== "dir" || !canGo(cur(), d)) return;
+  G.dir = d; G.phase = "moving"; render(); walk();
+}
+function walk() {
+  const p = cur();
+  if (G.steps === 0) return land();
+  if (!canGo(p, G.dir)) {
+    G.phase = "dir"; G.note = `A wall in front, ${plural(G.steps, "step")} to go: choose again.`;
+    return render();
+  }
+  if (p.r === EXIT.r && p.c === EXIT.c && G.dir === "N") return leave();
+  p.r += MOVE[G.dir][0]; p.c += MOVE[G.dir][1]; G.steps--;
+  placePieces();
+  setTimeout(walk, STEP_MS);
+}
+function land() {
+  const p = cur(), b = BOXES[p.r][p.c];
+  if (b === ".") { G.note = `${esc(p.name)} stops on a plain square.`; return nextTurn(); }
+  G.card = { colour: COLOUR[b], index: draw(COLOUR[b]) };
+  G.cardDie = 0; G.phase = "card"; render();
+}
+function score(n) {
+  const p = cur();
+  p.pts += n; G.answer = n;
+  G.note = `${esc(p.name)} earns ${plural(n, "point")}.`;
+  if (!canObject().length) return nextTurn();
+  G.phase = "object"; render();
+}
+function object(i) {
+  G.objector = i; G.players[i].tokens--; G.phase = "ruling"; render();
+}
+function rule(valid) {
+  const p = cur(), o = G.players[G.objector];
+  if (valid) {
+    p.pts -= G.answer; o.pts += G.answer; G.objector = null;
+    G.note = `The objection is valid: ${esc(o.name)} takes the ${plural(G.answer, "point")} from ${esc(p.name)}.`;
+    return nextTurn();
+  }
+  const lost = Math.min(INVALID_OBJECTION_COST, o.pts);
+  o.pts -= lost; G.objector = null;
+  G.note = `The objection is not valid: ${esc(o.name)} loses ${plural(lost, "point")}.`;
+  if (!canObject().length) return nextTurn();
+  G.phase = "object"; render();
+}
+function leave() {
+  const p = cur();
+  p.left = true; G.leftOrder.push(G.turn);
+  G.note = G.leftOrder.length === 1 ? `${esc(p.name)} leaves the maze first, and wins.` : `${esc(p.name)} leaves the maze.`;
+  if (!inMaze().length) return end();
+  nextTurn();
+}
+function nextTurn() {
+  G.objector = null;
+  do G.turn = (G.turn + 1) % G.players.length; while (G.players[G.turn].left);
+  G.phase = "roll"; G.roll = 0;
+  render();
+}
+function end() {
+  G.phase = "over";
+  $("#game").hidden = true; $("#end").hidden = false;
+  $("#end").innerHTML = `<h2>Everyone has left the maze</h2>
+    <p>In the order they left:</p>
+    <ol>${G.leftOrder.map((i, k) => `<li>${swatch(i)} ${esc(G.players[i].name)}${k === 0 ? " <strong>wins</strong>" : ""}, with ${plural(G.players[i].pts, "point")}</li>`).join("")}</ol>
+    <div class="start"><button type="button" class="go" data-act="again">Play again</button></div>`;
+}
+
+// ---------- drawing the panel ----------
+const PIPS = { 1: [[2, 2]], 2: [[1, 1], [3, 3]], 3: [[1, 1], [2, 2], [3, 3]], 4: [[1, 1], [3, 1], [1, 3], [3, 3]],
+  5: [[1, 1], [3, 1], [2, 2], [1, 3], [3, 3]], 6: [[1, 1], [3, 1], [1, 2], [3, 2], [1, 3], [3, 3]] };
+const die = n => `<svg class="die" viewBox="0 0 60 60" aria-hidden="true"><g filter="url(#pencil)"><rect x="4" y="4" width="52" height="52" rx="10"/>${(PIPS[n] || []).map(([a, b]) => `<circle cx="${a * 15}" cy="${b * 15}" r="4.6"/>`).join("")}</g></svg>`;
+
+function render() {
+  const p = cur(), who = `<div class="who">${swatch(G.turn)}<h3>${esc(p.name)}</h3></div>`;
+  const note = G.note ? `<p class="note">${G.note}</p>` : "";
+  let html = "";
+  if (G.phase === "roll" || G.phase === "rolling") {
+    const rolling = G.phase === "rolling";
+    html = `${note}${who}<div class="row ${rolling ? "tumble" : ""}">
+      <button type="button" class="dicebtn" data-act="roll" ${rolling ? "disabled" : ""} aria-label="Roll the die">${die(rolling ? 1 + Math.floor(Math.random() * 6) : 5)}</button>
+      <span>${rolling ? "Rolling…" : "Roll the die to move."}</span></div>`;
+  } else if (G.phase === "dir" || G.phase === "moving") {
+    const head = G.phase === "moving" ? `Moving ${DIRNAME[G.dir]}…` : G.note || `Rolled ${G.roll}. Choose a direction; the counter goes straight ${plural(G.roll, "square")}.`;
+    html = `${who}<div class="row">${die(G.roll)}<span>${head}</span></div>
+      <div class="row dirs">${Object.keys(MOVE).map(d => `<button type="button" data-act="dir" data-arg="${d}" ${G.phase === "dir" && canGo(p, d) ? "" : "disabled"}>${ARROW[d]} ${DIRNAME[d]}</button>`).join("")}</div>`;
+  } else if (G.phase === "card") {
+    html = `${who}<div class="card ${G.card.colour}"><h3>${G.card.colour[0].toUpperCase() + G.card.colour.slice(1)} card</h3><p>${esc(cardText())}</p></div>
+      <div class="cardroll"><button type="button" class="dicebtn" data-act="cardroll" aria-label="Roll for the card">${die(G.cardDie)}</button>
+      <span>${G.cardDie ? `Rolled ${G.cardDie} for the card.` : "If the card asks for a roll, roll here. It moves nobody."}</span></div>
+      <p>Read the card aloud and answer it. Scoring this answer: <strong>${judgeNow()}</strong>. Every answer earns at least 1.</p>
+      <div class="scorebtns">${[1, 2, 3, 4, 5, 6, 7].map(n => `<button type="button" data-act="score" data-arg="${n}">${n}</button>`).join("")}</div>`;
+  } else if (G.phase === "object") {
+    html = `${who}<p>${G.note} Does anyone object? The objector gives a better answer, and the Judge rules.</p>
+      <div class="row">${canObject().map(i => `<button type="button" data-act="object" data-arg="${i}">${esc(G.players[i].name)} objects</button>`).join("")}</div>
+      <div class="row"><button type="button" class="go" data-act="noobject">No objection: next player</button></div>`;
+  } else if (G.phase === "ruling") {
+    const o = G.players[G.objector];
+    html = `${who}<p>${esc(o.name)} objects and gives an answer. Ruling: <strong>${judgeNow()}</strong>.</p>
+      <div class="row"><button type="button" data-act="valid">Valid: ${esc(o.name)} takes the ${plural(G.answer, "point")}</button>
+      <button type="button" data-act="invalid">Not valid: ${esc(o.name)} loses ${INVALID_OBJECTION_COST}</button></div>`;
+  }
+  $("#panel").innerHTML = html;
+  renderScores();
+  placePieces();
+}
+
+function renderScores() {
+  $("#scores").innerHTML = `<table><thead><tr><th>Player</th><th>Points</th><th>Objections</th></tr></thead><tbody>${G.players.map((p, i) => {
+    const place = G.leftOrder.indexOf(i);
+    const status = p.left ? `<span class="status ok">left the maze${place === 0 ? ", wins" : ""}</span>`
+      : p.pts >= G.need ? `<span class="status ok">has the points: head for the exit</span>` : `<span class="status">needs ${G.need - p.pts} more</span>`;
+    return `<tr class="${i === G.turn && !p.left ? "now" : ""}"><td><div class="name">${swatch(i)}<div>${esc(p.name)}<br>${status}</div></div></td>
+      <td>${p.pts} / ${G.need}</td><td class="tokens" aria-label="${p.tokens} tokens left">${[0, 1, 2].map(k => `<i class="${k < p.tokens ? "full" : ""}"></i>`).join("")}</td></tr>`;
+  }).join("")}</tbody></table><p class="hint">Judge: ${judgeLabel()}</p>`;
+}
+
+// ---------- language ----------
+async function setLang(l) {
+  try { await loadCards(l); } catch { return; }
+  lang = l;
+  document.body.classList.toggle("gu", l === "gujarati");
+  document.querySelectorAll('[data-act="lang"]').forEach(b => b.setAttribute("aria-pressed", b.dataset.arg === l));
+  if (G && G.phase === "card") render();
+}
+
+// ---------- input ----------
+const ACT = {
+  add: () => nameRow(),
+  remove: b => { b.closest("li").remove(); numberRows(); },
+  start, roll,
+  lang: b => setLang(b.dataset.arg),
+  dir: b => choose(b.dataset.arg),
+  cardroll: () => { G.cardDie = 1 + Math.floor(Math.random() * 6); render(); },
+  score: b => score(+b.dataset.arg),
+  object: b => object(+b.dataset.arg),
+  noobject: nextTurn,
+  valid: () => rule(true),
+  invalid: () => rule(false),
+  again: () => { $("#end").hidden = true; $("#setup").hidden = false; G = null; },
+};
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]");
+  if (b && !b.disabled) ACT[b.dataset.act](b);
+});
+document.addEventListener("input", e => { if (e.target.closest("#names")) judgeOptions(); });
+document.addEventListener("keydown", e => {
+  const d = { ArrowUp: "N", ArrowRight: "E", ArrowDown: "S", ArrowLeft: "W" }[e.key];
+  if (d && G && G.phase === "dir") { e.preventDefault(); choose(d); }
+});
+
+nameRow(); nameRow();
+</script>
+</body>
+</html>
