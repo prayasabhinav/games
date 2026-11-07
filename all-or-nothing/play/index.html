@@ -367,7 +367,7 @@ footer { margin-top: 28px; padding-top: 10px; border-top: 1.4px solid var(--grap
 // ---------- the game ----------
 
 const MINUS = '−';
-const CPU_DELAY = 1000;
+const CPU_DELAY = 2900;   // a computer player waits this long, and up to 40% more at random, so it does not play like a machine
 let G = null;
 
 function newDeck() {
@@ -707,7 +707,7 @@ function advance() {
   ui.covered = false;
   const p = G.players[G.turn];
   if (G.result) showRoundEnd();
-  else if (p.cpu) ui.timer = setTimeout(() => { cpuTurn(); advance(); }, CPU_DELAY);
+  else if (p.cpu) ui.timer = setTimeout(() => { cpuTurn(); advance(); }, CPU_DELAY * (1 + Math.random() * .4));
   else if (needsCover(p)) cover(p);
   render();
 }

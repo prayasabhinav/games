@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blackpool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --water: #121212; --water-2: #1d1d1d; --line: #e9e9e6; --mist: #9b9b98;
+  --page: #e4e4e1; --page-edge: #b9b9b6; --ink: #161616; --ink-soft: #55554f;
+  --yellow: #FEC665; --red: #CE3D33; --blue: #5DC0CD; --green: #94C93D;
+  --serif: "EB Garamond", Garamond, Georgia, serif;
+  --mono: "Roboto Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--water); }
+body { margin: 0; background: var(--water); color: var(--line); font: 19px/1.45 var(--serif); }
+.wrap { max-width: 1400px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 40px; }
+header { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; border-bottom: 1px solid #3a3a38; padding-bottom: 12px; }
+h1 { font: 500 2.6rem/1 var(--serif); letter-spacing: .32em; margin: 0; }
+header p { margin: 0; font: 400 .8rem/1.4 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--mist); }
+a { color: var(--line); }
+h2 { font: 500 1.7rem/1.15 var(--serif); margin: 0 0 10px; }
+h3 { font: 500 1.25rem/1.2 var(--serif); margin: 0 0 6px; }
+
+/* the booklet's pages: light grey sheets with a darker edge */
+.sheet { background: var(--page); color: var(--ink); border-left: 10px solid var(--page-edge); padding: 16px 18px; }
+.sheet a { color: var(--ink); }
+.mono { font-family: var(--mono); font-size: .78rem; letter-spacing: .06em; }
+.soft { color: var(--ink-soft); }
+button { font: 500 1rem/1.2 var(--serif); color: var(--ink); background: #f4f4f1; border: 1.4px solid var(--ink); padding: 7px 14px; cursor: pointer; }
+button:hover:not(:disabled) { background: #fff; }
+button:disabled { opacity: .4; cursor: default; }
+button[aria-pressed="true"] { background: var(--ink); color: var(--page); }
+button.go { font-size: 1.2rem; padding: 10px 26px; background: var(--ink); color: var(--page); }
+button.go:hover:not(:disabled) { background: #333; }
+button:focus-visible, .trav:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+input[type=text] { font: inherit; color: var(--ink); background: #f7f7f4; border: 1.4px solid var(--ink); padding: 4px 10px; width: 10em; max-width: 100%; }
+.swatch { display: inline-block; width: 16px; height: 16px; border: 1.4px solid var(--ink); vertical-align: -2px; flex: none; }
+
+/* set up */
+#setup, #join { max-width: 640px; margin: 26px auto; }
+.seat { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 0; border-top: 1px solid var(--page-edge); }
+.seat b { min-width: 64px; font-weight: 500; }
+.seat .seg { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.seg button { font-size: .92rem; padding: 4px 10px; }
+#net { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--page-edge); }
+.code { font: 500 2.4rem/1 var(--mono); letter-spacing: .2em; margin: 8px 0; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 10px 0; }
+
+/* the table */
+#game { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: 22px; margin-top: 18px; align-items: start; }
+.boardbox { position: relative; width: 100%; max-width: 860px; justify-self: center; aspect-ratio: 1; }
+.boardbox img, .boardbox svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.trav { cursor: default; }
+.trav.can { cursor: pointer; }
+.trav .halo { fill: none; stroke: #fff; stroke-width: 3; opacity: 0; }
+.trav.can .halo { opacity: 1; animation: halo 1.3s ease-in-out infinite; }
+@keyframes halo { 50% { opacity: .25; } }
+#turnBanner { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); display: flex; justify-content: center; pointer-events: none; opacity: 0; }
+#turnBanner.show { animation: banner 1.9s ease-in-out forwards; }
+#turnBanner span { display: flex; align-items: center; gap: 14px; background: rgba(14,14,14,.88); color: var(--line); font: 500 clamp(1.4rem, 3.4vw, 2.4rem)/1 var(--serif); letter-spacing: .06em; padding: 16px 30px; border-top: 3px solid; border-bottom: 3px solid; }
+#turnBanner i { width: 22px; height: 22px; display: inline-block; }
+@keyframes banner { 0% { opacity: 0; } 18% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
+.dest { fill: rgba(255,255,255,.18); stroke: #fff; stroke-width: 3; stroke-dasharray: 8 6; pointer-events: none; }
+aside { display: grid; gap: 14px; }
+.who { display: flex; align-items: center; gap: 12px; }
+.who .name { font: 500 1.5rem/1 var(--serif); }
+.who .kind { font: .75rem var(--mono); color: var(--ink-soft); }
+button.roll { display: flex; align-items: center; gap: 16px; width: 100%; margin: 14px 0 4px; padding: 12px 16px; background: var(--ink); color: var(--page); border: 0; text-align: left; }
+button.roll:hover:not(:disabled) { background: #2b2b2b; }
+button.roll svg { width: 58px; height: 58px; flex: none; }
+button.roll svg rect { fill: var(--page); } button.roll svg text { fill: var(--ink); }
+button.roll span { font: 500 1.5rem/1.1 var(--serif); }
+button.roll small { display: block; font: .72rem/1.6 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: #a9a9a5; }
+.waiting { font-style: italic; color: var(--ink-soft); }
+.rolled { display: flex; align-items: center; gap: 14px; margin: 12px 0 4px; }
+.rolled svg { width: 58px; height: 58px; flex: none; }
+.rolled div { font: .72rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+.rolled b { display: block; font: 500 2.2rem/1 var(--serif); color: var(--ink); letter-spacing: 0; }
+.forces { display: flex; gap: 18px; margin: 10px 0 4px; }
+.forces div { font: .72rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+.forces b { display: block; font: 500 2rem/1 var(--serif); color: var(--ink); text-transform: none; letter-spacing: 0; }
+.status { list-style: none; padding: 0; margin: 8px 0; font-size: .98rem; }
+.status li { display: flex; gap: 8px; align-items: baseline; padding: 3px 0; border-top: 1px solid #cfcfcb; }
+.status li b { font-weight: 500; min-width: 4.6em; }
+.prompt { margin: 8px 0; }
+.buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.cardface { margin: 8px 0; }
+.cardface img { display: block; width: min(100%, 260px); }
+.card { display: grid; grid-template-columns: 96px 1fr; gap: 14px; align-items: start; background: #0e0e0e; color: #eee; padding: 14px; margin: 8px 0; }
+.card img { width: 96px; height: 96px; display: block; }
+.card h3 { text-decoration: underline; text-underline-offset: 3px; margin-bottom: 4px; }
+.card p { margin: 0; font-size: .98rem; }
+.teams .team { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: center; padding: 6px 0; border-top: 1px solid #cfcfcb; }
+.teams .team.now { background: linear-gradient(90deg, #d4d4d0, transparent); }
+.teams .where { grid-column: 2 / 4; font-size: .9rem; color: var(--ink-soft); }
+.coins { display: flex; gap: 4px; }
+.coins i { width: 14px; height: 14px; border-radius: 50%; border: 1.2px solid var(--ink); }
+.decks { display: flex; gap: 14px; }
+.decks figure { margin: 0; text-align: center; font-size: .9rem; }
+.decks img { width: 72px; height: 72px; display: block; margin: 0 auto 4px; }
+.decks .gone { opacity: .25; }
+#log ol { list-style: none; padding: 0; margin: 0; max-height: 16rem; overflow: auto; font-size: .95rem; }
+#log li { padding: 2px 0; color: var(--ink-soft); }
+#log li:first-child { color: var(--ink); }
+.overlay { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(10,10,10,.82); }
+.overlay .sheet { max-width: 460px; }
+details { margin-top: 26px; border-top: 1px solid #3a3a38; padding-top: 10px; }
+summary { cursor: pointer; font: 500 1.2rem var(--serif); }
+details li { margin: 6px 0; }
+.steps { padding-left: 1.3em; margin: 10px 0 6px; max-width: 70ch; }
+.steps li { margin: 7px 0; }
+.steps b { font-weight: 600; }
+.example { margin: 6px 0 0; max-width: 70ch; color: var(--mist); }
+.camp-mark { fill: rgba(0,0,0,.35); stroke-width: 5; stroke-dasharray: 10 7; }
+.camp-label { font: 500 17px 'Roboto Mono', monospace; fill: #fff; letter-spacing: .12em; }
+dialog { width: min(640px, 94vw); height: min(760px, 88vh); padding: 0; border: 0; background: var(--page); color: var(--ink); }
+dialog::backdrop { background: rgba(0,0,0,.7); }
+.formHead { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; }
+dialog iframe { width: 100%; height: calc(100% - 58px); border: 0; display: block; background: #fff; }
+footer { margin-top: 30px; color: var(--mist); font-size: .95rem; }
+@media (max-width: 900px) {
+  #game { grid-template-columns: minmax(0, 1fr); }
+  h1 { font-size: 2rem; letter-spacing: .24em; }
+  /* the board, where you tap, comes first; the turn panel follows straight under it */
+  #game { gap: 12px; margin-top: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .trav.can .halo { animation: none; } #turnBanner.show { animation-duration: .01s; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>BLACKPOOL</h1>
+  <p>Escape the dark waters</p>
+</header>
+
+<section id="setup" class="sheet">
+  <h2>Who is playing</h2>
+  <p class="soft">Two to four players, each with three travellers. Turns go anti-clockwise round the board: Yellow, Red, Blue, Green.</p>
+  <div id="seats"></div>
+  <p id="setupNote" class="soft"></p>
+  <div class="row"><button type="button" class="go" id="start">Start</button></div>
+  <div id="net">
+    <h3>Play on separate devices</h3>
+    <div id="hostRow" class="row"><input type="text" id="hostName" placeholder="Your name" maxlength="20"><button type="button" id="host">Host a game</button></div>
+    <div id="hosting" hidden>
+      <p class="soft">Send the others this link. When they have joined, give each a colour above.</p>
+      <div class="code" id="code"></div>
+      <div class="row"><a id="link" href="#"></a><button type="button" id="copy">Copy</button></div>
+      <p id="joined" class="soft"></p>
+    </div>
+  </div>
+</section>
+
+<section id="join" class="sheet" hidden>
+  <h2>Join a game</h2>
+  <div class="code" id="joinCode"></div>
+  <div id="joinForm" class="row"><input type="text" id="joinName" placeholder="Your name" maxlength="20"><button type="button" id="joinBtn">Join</button></div>
+  <p id="joinSay" class="soft"></p>
+  <button type="button" id="back" hidden>Back</button>
+</section>
+
+<section id="game" hidden>
+  <div class="boardbox">
+    <img src="board.jpg" alt="The Blackpool board: a whirlpool in four rings round a centre, each colour's path spiralling out to its camp in a corner">
+    <svg id="pieces" viewBox="0 0 900 900" aria-label="Travellers on the board"></svg>
+    <div id="turnBanner" aria-hidden="true"></div>
+  </div>
+  <aside>
+    <div id="panel" class="sheet" aria-live="polite"></div>
+    <div id="teams" class="sheet teams"></div>
+    <div id="decksBox" class="sheet"></div>
+    <div id="log" class="sheet"><h3>What happened</h3><ol></ol></div>
+  </aside>
+</section>
+
+<div id="over" class="overlay" hidden><div class="sheet" id="overSheet"></div></div>
+<dialog id="formDialog" aria-labelledby="formTitle"><div class="formHead"><h3 id="formTitle">How the game went</h3><button type="button" id="formClose">Close</button></div><iframe id="formFrame" title="Form: how the game went"></iframe></dialog>
+
+<details id="howto">
+  <summary>How to play</summary>
+  <ol class="steps">
+    <li><b>Goal.</b> Bring all three of your travellers into your camp, the corner square in your colour. The first player to do it wins.</li>
+    <li><b>Your path.</b> Each traveller follows the arrows in your colour: round its ring anti-clockwise, out to the next ring, then along the edge into camp.</li>
+    <li><b>Roll the Oracle.</b> The number is your <b>Whiteforce</b> for this turn.</li>
+    <li><b>The water pulls back.</b> Each ring has a <b>Blackforce</b>, printed in its corners. The centre pulls 5, the ring round it 4, the next 3, the outer ring 2. The edge has none. Rings are called by their pull: ring 4, ring 3, ring 2.</li>
+    <li><b>Compare, for each traveller.</b> Your number is higher than its ring's: it goes <b>forward</b> as many squares as you rolled. Lower: the water pulls it <b>back</b> as many squares as you rolled. The same: it stays.</li>
+    <li><b>Move one traveller.</b> Tap one that glows. If any can go forward you choose one of those. You pull one back only if none can go forward.</li>
+    <li><b>Landing on another colour</b>, you ride on it: when it moves you go along. A traveller carrying a rider is heavy, so it goes forward less and is pulled back further. You cannot land on your own, or on a square that already has two.</li>
+    <li><b>A six.</b> Move six and roll again, or bring a traveller out of the centre (only a six can), or spend one of your three coins on a card. A charm helps you; a curse hurts someone else.</li>
+  </ol>
+  <p class="soft example">Example: you roll 3. Yellow 1 is in ring 2, which pulls 2: 3 beats it, forward 3. Yellow 2 is in ring 4, which pulls 4: it would be pulled back 3. Yellow 3 is in ring 3: equal, it stays. So you move Yellow 1.</p>
+</details>
+
+<details>
+  <summary>How this version reads the rules</summary>
+  <ol>
+    <li>This version follows the printed board: Blackforce 5 in the centre, 4, 3 and 2 in the rings, none on the path round the edge. The booklet's glossary says the rings go from 4 down to 1, and that a 5 brings a traveller out of the centre. Both come from an earlier draft. The board and the rest of the booklet say the rings go down to 2, and that it takes a 6.</li>
+    <li>If any traveller can go forward, you move one of them forward. You pull one back only if none can go forward. If none can move either way, the turn passes.</li>
+    <li>A move that would land on your own traveller, or on a square already holding two, cannot be made. A move that reaches or passes the camp ends in the camp. A move back past the start of the path ends in the centre.</li>
+    <li>The centre and the camps hold any number of travellers, and nobody piggy-backs there.</li>
+    <li>The rider moves only with the traveller under it, or on its own turn, when it moves off by the normal rules, not the slower table. A rider is never carried out of the water, onto the path round the edge: when the traveller under it moves onto the edge, the rider stays where it was.</li>
+    <li>A traveller carrying a rider moves by the booklet's table: forward 3, 3, 2, 2, 1, 0 for a roll of 6 to 1, and back 6, 4, 2 for a roll of 3, 2, 1.</li>
+    <li>With a six you choose one of three things: bring a traveller out of the centre six squares, spend a coin on a card, or move any traveller six forward and roll again. With a six and no move to make, you roll again.</li>
+    <li>The cards lie face down. You choose the charm deck or the curse deck and play the top card at once. A card with nothing to act on is spent without effect. Each card can be played only once in a game.</li>
+    <li>A card moves only the traveller it names; a rider on that traveller stays where it is. One exception: Gust of Force moves each of your travellers in the water six squares, and their riders go with them; frozen travellers and those in the centre do not move. The Reset curse sends a player's travellers back to the circles they started on. Diagonal Step Up and Diagonal Step Down move a traveller to the square diagonally out, or in, by one ring; from ring 4, a step in reaches the centre.</li>
+    <li>A traveller frozen by the Freeze curse stays where it is until the Awaken charm is played on it. A rider can still leave it.</li>
+    <li>The first player is chosen at random. Colours not playing are left off the board.</li>
+  </ol>
+</details>
+
+<footer>
+  <p>Blackpool: Escape the Dark Waters, a board game by Prayas Abhinav and Priyamvada Gaur, made in 2019 under Nonserious, the games brand of Storyflock Education and Design Services LLP. © 2019 Prayas Abhinav and Priyamvada Gaur, licensed under <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0</a>. <a href="../">Rules and print files</a>.</p>
+  <p>When you play on separate phones, each move goes through games-relay.prayasabhinav.net, a server that passes it on and keeps no record.</p>
+</footer>
+</div>
+
+<script>
+// ---------- the game ----------
+// The board is 9 squares by 9. Square [row, column] from the top left. Each colour's path is the yellow path turned.
+
+const COLOURS = [
+  { name: 'Yellow', hex: '#FEC665', turns: 0 },
+  { name: 'Red', hex: '#CE3D33', turns: 3 },
+  { name: 'Blue', hex: '#5DC0CD', turns: 2 },
+  { name: 'Green', hex: '#94C93D', turns: 1 },
+];                                   // seat order is turn order: anti-clockwise from the top
+const CAMP = 56, OUT = 49;           // path index of the camp, and of the first square out of the water
+const STARTS = [1, 9, 25];           // the starting circles in rings 4, 3 and 2
+const FORWARD_WITH_RIDER = [0, 0, 1, 2, 2, 3, 3];   // by roll, from the booklet's table
+const BACK_WITH_RIDER = [0, 2, 4, 6, 0, 0, 0];      // 0: not possible
+const CARDS = {
+  'Awaken': ['charm', 'If a traveller is in the effect of Deep Sleep, this charm awakens it. Traveller may then be ready to move normally.'],
+  '12-steps to Freedom': ['charm', 'If a traveller is at the centre of the Blackpool, use this charm to bring it out by moving 12 spaces from the centre.'],
+  'Piggy-back Relief': ['charm', 'Use this charm to drop all clingy piggies and move ahead by 2 spaces each traveller who is carrying a piggy-back.'],
+  'Gust Of Force': ['charm', 'Use this charm to move all your travellers, outward by 6 spaces each.'],
+  'Diagonal Step Up': ['charm', 'Use this charm to move one of your traveller diagonally outward (from one ring to next).'],
+  'Freeze': ['curse', 'Put any one traveller of another player to sleep, using this curse. Till the curse is lifted, that traveller cannot move from its place.'],
+  'Fix to Center': ['curse', "Drop one traveller of another player into the centre of whirlpool. Till the player gets a 6 or '12-steps to Freedom' charm, that traveller stays at the centre."],
+  'Piggyback Inverse': ['curse', 'Use this curse to change places with travellers of other player(s) who are piggy-backing on your traveller(s). Now you piggy-back on them.'],
+  'Reset': ['curse', 'Use this curse to move all travellers of any one player to their respective start points.'],
+  'Diagonal Step Down': ['curse', 'Use this curse to move one traveller of another player diagonally inward (from one ring to next).'],
+};
+
+function yellowPath() {
+  const p = [[4, 4]];
+  for (const h of [1, 2, 3]) {                    // rings 4, 3 and 2, each once round anti-clockwise
+    let r = 4 - h, c = 4 + h - 1;
+    p.push([r, c]);
+    while (c > 4 - h) p.push([r, --c]);
+    while (r < 4 + h) p.push([++r, c]);
+    while (c < 4 + h) p.push([r, ++c]);
+    while (r > 4 - h) p.push([--r, c]);
+  }
+  for (let c = 7; c >= 0; c--) p.push([0, c]);    // out along the top edge to the camp
+  return p;
+}
+const PATHS = COLOURS.map(col => yellowPath().map(([r, c]) => {
+  for (let i = 0; i < col.turns; i++) [r, c] = [c, 8 - r];
+  return [r, c];
+}));
+const keyAt = (t, pos) => PATHS[t.col][pos][0] * 9 + PATHS[t.col][pos][1];
+const indexOn = (col, key) => PATHS[col].findIndex(([r, c]) => r * 9 + c === key);
+const force = i => i === 0 ? 5 : i <= 8 ? 4 : i <= 24 ? 3 : i < OUT ? 2 : 0;
+const where = i => i === 0 ? 'the centre' : i <= 8 ? 'ring 4' : i <= 24 ? 'ring 3' : i < OUT ? 'ring 2' : i < CAMP ? 'the path out' : 'camp';
+
+let G = null;
+
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+// players: [{col, name, cpu, dev}] in turn order
+function newGame(players) {
+  const names = Object.keys(CARDS);
+  G = {
+    players: players.map(p => ({ ...p, coins: 3 })), trav: [],
+    decks: { charm: shuffle(names.filter(n => CARDS[n][0] === 'charm')), curse: shuffle(names.filter(n => CARDS[n][0] === 'curse')) },
+    id: Math.random().toString(36).slice(2), used: [], turn: Math.floor(Math.random() * players.length), phase: 'roll', roll: 0, card: null, winner: null, log: [], moved: null,
+  };
+  G.players.forEach((p, i) => STARTS.forEach((s, k) => G.trav.push({ id: G.trav.length, p: i, col: p.col, k, pos: s, on: null, frozen: false })));
+  say(`${G.players[G.turn].name} goes first.`);
+}
+
+const slug = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+const tname = t => `${COLOURS[t.col].name} ${t.k + 1}`;
+const mine = p => G.trav.filter(t => t.p === p);
+const riderOf = t => G.trav.find(o => o.on === t.id);
+const deckSize = d => Array.isArray(G.decks[d]) ? G.decks[d].length : G.decks[d];
+const canDraw = () => G.roll === 6 && G.players[G.turn].coins > 0 && (deckSize('charm') + deckSize('curse') > 0);
+const progress = p => mine(p).reduce((a, t) => a + t.pos, 0);
+function say(s) { G.log.unshift(s); if (G.log.length > 80) G.log.pop(); }
+
+// t landing at pos (bringing rider along, if any): null if it may not, else {onto: the piece it rides on, or null}
+function landing(t, pos, rider) {
+  if (pos === t.pos) return { onto: t.on };                 // staying where it is
+  if (pos === 0 || pos === CAMP) return { onto: null };
+  const k = keyAt(t, pos);
+  const occ = G.trav.filter(o => o !== t && o !== rider && o.pos > 0 && o.pos < CAMP && keyAt(o, o.pos) === k);
+  if (!occ.length) return { onto: null };
+  if (rider || occ.length > 1 || occ.some(o => o.p === t.p)) return null;
+  return { onto: occ[0].id };
+}
+
+// the move t makes with this roll, or null
+function moveFor(t, W) {
+  if (t.pos === CAMP || t.frozen) return null;
+  const B = force(t.pos), rider = riderOf(t);
+  let s = 0;
+  if (t.pos === 0) s = W === 6 ? 6 : 0;
+  else if (W > B) s = rider ? FORWARD_WITH_RIDER[W] : W;
+  else if (W < B) s = -(rider ? BACK_WITH_RIDER[W] : W);
+  if (!s) return null;
+  const to = Math.max(0, Math.min(CAMP, t.pos + s));
+  const carry = rider && to < OUT ? rider : null;
+  const land = landing(t, to, carry);
+  return land && { t, from: t.pos, to, carry, onto: land.onto };
+}
+
+// one traveller: forward if any can go forward, else back
+function legalMoves() {
+  const all = mine(G.turn).map(t => moveFor(t, G.roll)).filter(Boolean);
+  const fwd = all.filter(m => m.to > m.from);
+  return fwd.length ? fwd : all;
+}
+
+// t to pos; whatever rode on t stays behind if t leaves the square
+function place(t, pos, onto) {
+  const r = riderOf(t);
+  if (r && keyAt(t, pos) !== keyAt(t, t.pos)) r.on = null;
+  t.pos = pos; t.on = pos === 0 || pos === CAMP ? null : onto;
+}
+
+function doMove(m) {
+  place(m.t, m.to, m.onto);
+  if (m.carry) {
+    if (m.to === 0) place(m.carry, 0, null);
+    else place(m.carry, indexOn(m.carry.col, keyAt(m.t, m.to)), m.t.id);
+  }
+}
+
+// the nearest square from `to` back towards `from` where t may stand alone
+function settle(t, to, from) {
+  for (let i = to; ; i += Math.sign(from - to)) {
+    const l = landing(t, i, null);
+    if (l) return { to: i, onto: l.onto };
+    if (i === from) return { to: from, onto: null };
+  }
+}
+
+// the square one ring out (dir 1) or in (dir -1), diagonally; returns a path index or null
+function diagonal(t, dir) {
+  if (t.pos === 0 || t.pos >= OUT) return null;
+  if (dir < 0 && t.pos <= 8) return 0;
+  const [r, c] = PATHS[t.col][t.pos], [nr, nc] = PATHS[t.col][t.pos + 1];
+  const sr = Math.sign(r - 4) || dir * Math.sign(nr - r), sc = Math.sign(c - 4) || dir * Math.sign(nc - c);
+  const sq = dir > 0 ? [r + sr, c + sc] : [r - Math.sign(r - 4) + (Math.sign(r - 4) ? 0 : sr), c - Math.sign(c - 4) + (Math.sign(c - 4) ? 0 : sc)];
+  const i = indexOn(t.col, sq[0] * 9 + sq[1]);
+  return i < 0 ? null : i;
+}
+
+function cardTargets(name, p) {
+  const own = mine(p).filter(t => t.pos < CAMP), theirs = G.trav.filter(t => t.p !== p && t.pos < CAMP);
+  const ids = list => list.map(t => ({ t: t.id }));
+  const diagOK = (t, dir) => { const i = diagonal(t, dir); return i != null && landing(t, i, null); };
+  switch (name) {
+    case 'Awaken': return ids(own.filter(t => t.frozen));
+    case '12-steps to Freedom': return ids(own.filter(t => t.pos === 0));
+    case 'Diagonal Step Up': return ids(own.filter(t => !t.frozen && diagOK(t, 1)));
+    case 'Freeze': return ids(theirs.filter(t => !t.frozen));
+    case 'Fix to Center': return ids(theirs.filter(t => t.pos > 0));
+    case 'Diagonal Step Down': return ids(theirs.filter(t => diagOK(t, -1)));
+    case 'Reset': return G.players.map((q, i) => i).filter(i => i !== p && mine(i).some(t => t.pos < CAMP)).map(i => ({ p: i }));
+    default: return null;            // the card acts without a choice
+  }
+}
+
+function applyCard(name, p, target) {
+  const t = target && target.t != null ? G.trav[target.t] : null;
+  const who = G.players[p].name;
+  switch (name) {
+    case 'Awaken': t.frozen = false; return say(`${tname(t)} wakes.`);
+    case 'Freeze': t.frozen = true; return say(`${tname(t)} is frozen.`);
+    case '12-steps to Freedom': { const s = settle(t, 12, 0); place(t, s.to, s.onto); return say(`${tname(t)} leaves the centre for ${where(t.pos)}.`); }
+    case 'Fix to Center': place(t, 0, null); return say(`${tname(t)} drops into the centre.`);
+    case 'Diagonal Step Up': case 'Diagonal Step Down': {
+      const i = diagonal(t, name === 'Diagonal Step Up' ? 1 : -1);
+      const l = landing(t, i, null); place(t, i, l.onto); return say(`${tname(t)} steps diagonally into ${where(t.pos)}.`);
+    }
+    case 'Reset': {
+      for (const u of mine(target.p).filter(u => u.pos < CAMP)) { const s = settle(u, STARTS[u.k], 0); place(u, s.to, s.onto); }
+      return say(`${G.players[target.p].name}'s travellers go back to their starting circles.`);
+    }
+    case 'Piggy-back Relief': {
+      const carriers = mine(p).filter(u => riderOf(u));
+      if (!carriers.length) return say('Nobody is carrying a piggy-back, so nothing happens.');
+      for (const u of carriers) if (!u.frozen) { const s = settle(u, Math.min(CAMP, u.pos + 2), u.pos); place(u, s.to, s.onto); }
+      return say(`${who}'s travellers drop their piggy-backs and move ahead.`);
+    }
+    case 'Gust Of Force': {
+      const movers = mine(p).filter(u => !u.frozen && u.pos > 0 && u.pos < CAMP).sort((a, b) => b.pos - a.pos);
+      if (!movers.length) return say('No traveller can be moved, so nothing happens.');
+      for (const u of movers) {
+        const to = Math.min(CAMP, u.pos + 6), rider = riderOf(u), carry = rider && to < OUT ? rider : null, l = landing(u, to, carry);
+        if (l) doMove({ t: u, from: u.pos, to, carry, onto: l.onto });
+        else { const s = settle(u, to, u.pos); place(u, s.to, s.onto); }
+      }
+      return say(`A gust carries ${who}'s travellers outward.`);
+    }
+    case 'Piggyback Inverse': {
+      const carriers = mine(p).filter(u => riderOf(u));
+      if (!carriers.length) return say('Nobody is piggy-backing on them, so nothing happens.');
+      for (const u of carriers) { const r = riderOf(u); r.on = null; u.on = r.id; }
+      return say(`${who}'s travellers now ride on their riders.`);
+    }
+  }
+}
+
+// a move by the player whose turn it is; anything not allowed now is ignored. Returns true if it changed the game.
+function act(name, arg) {
+  if (!G || G.phase === 'over') return false;
+  const me = G.players[G.turn];
+  if (name === 'roll' && G.phase === 'roll') {
+    G.roll = 1 + Math.floor(Math.random() * 6); G.phase = 'act'; G.moved = null;
+    say(`${me.name} rolls ${G.roll}.`);
+    if (!legalMoves().length && !canDraw()) {
+      if (G.roll === 6) { say('No traveller can move. A six: roll again.'); G.phase = 'roll'; }
+      else { say('No traveller can move, so the turn passes.'); nextTurn(); }
+    }
+    return true;
+  }
+  if (name === 'move' && G.phase === 'act') {
+    const m = legalMoves().find(m => m.t.id === arg);
+    if (!m) return false;
+    doMove(m); G.moved = { id: m.t.id, from: m.from };
+    const d = m.to - m.from;
+    say(`${tname(m.t)} ${d > 0 ? 'goes forward' : 'is pulled back'} ${Math.abs(d)}, to ${where(m.to)}${m.onto != null ? `, riding on ${tname(G.trav[m.onto])}` : ''}${m.carry ? `, carrying ${tname(m.carry)}` : ''}.`);
+    if (won()) return true;
+    if (G.roll === 6 && m.from !== 0) { say(`${me.name} rolls again.`); G.phase = 'roll'; }
+    else nextTurn();
+    return true;
+  }
+  if (name === 'skip' && G.phase === 'act' && !legalMoves().length) {
+    if (G.roll === 6) { say(`${me.name} keeps the coin and rolls again.`); G.phase = 'roll'; } else nextTurn();
+    return true;
+  }
+  if (name === 'card' && G.phase === 'act' && canDraw() && (arg === 'charm' || arg === 'curse') && G.decks[arg].length) {
+    me.coins--;
+    const card = G.decks[arg].pop();
+    G.used.push(card);
+    G.card = { name: card, targets: cardTargets(card, G.turn) };
+    G.phase = 'card';
+    say(`${me.name} spends a coin and draws ${card}.`);
+    return true;
+  }
+  if (G.phase === 'card') {
+    const { name: card, targets } = G.card;
+    if (name === 'target' && targets && targets[arg]) applyCard(card, G.turn, targets[arg]);
+    else if (name === 'use' && (!targets || !targets.length)) {
+      if (targets) say(`${card} has nothing to act on, and is spent.`); else applyCard(card, G.turn, null);
+    } else return false;
+    G.card = null;
+    if (!won()) nextTurn();
+    return true;
+  }
+  return false;
+}
+
+function won() {
+  const i = G.players.findIndex((p, i) => mine(i).every(t => t.pos === CAMP));
+  if (i < 0) return false;
+  G.winner = i; G.phase = 'over';
+  say(`${G.players[i].name} brings all three travellers to camp, and wins.`);
+  return true;
+}
+
+function nextTurn() { G.turn = (G.turn + 1) % G.players.length; G.phase = 'roll'; G.card = null; }
+
+// the computer: its next action, from what any player can see
+function cpuPlan() {
+  if (G.phase === 'roll') return ['roll'];
+  if (G.phase === 'card') {
+    const T = G.card.targets;
+    if (!T || !T.length) return ['use'];
+    const value = x => x.p != null ? progress(x.p) : G.trav[x.t].pos;
+    return ['target', T.reduce((b, x, i) => value(x) > value(T[b]) ? i : b, 0)];
+  }
+  const moves = legalMoves(), me = G.turn;
+  const out = moves.find(m => m.from === 0);
+  if (out) return ['move', out.t.id];
+  const leader = G.players.some((p, i) => i !== me && progress(i) > progress(me));
+  if (canDraw() && (leader || !moves.length)) {
+    const d = leader && deckSize('curse') ? 'curse' : deckSize('charm') ? 'charm' : 'curse';
+    return ['card', d];
+  }
+  if (!moves.length) return ['skip'];
+  const score = m => (m.to - m.from) + (m.to === CAMP ? 20 : 0) + (m.onto != null ? 1 : 0) - (m.carry ? 2 : 0) - (m.from === 0 ? 0 : 0);
+  return ['move', moves.reduce((b, m) => score(m) > score(b) ? m : b).t.id];
+}
+
+// ---------- the page ----------
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+const net = { role: null, ws: null, id: null, hostId: null, name: '', guests: [] };
+const seats = COLOURS.map((c, i) => ({ col: i, name: i === 0 ? 'Yellow' : c.name, kind: i === 0 ? 'here' : 'cpu', dev: null }));
+const ui = { timer: 0, drawn: new Map(), pos: new Map(), turnKey: '' };
+// a computer player takes its time, a little differently each turn: a pause before rolling, a longer one to read the roll or a card
+const cpuDelay = () => ({ roll: 2300, act: 3400, card: 4000 }[G.phase] || 2300) + Math.random() * 1000;
+
+function renderSetup() {
+  $('#seats').innerHTML = seats.map((s, i) => `
+    <div class="seat" data-i="${i}"><span class="swatch" style="background:${COLOURS[i].hex}"></span><b>${COLOURS[i].name}</b>
+      <input type="text" value="${esc(s.name)}" maxlength="20" aria-label="Name for ${COLOURS[i].name}" ${s.kind === 'off' ? 'disabled' : ''}>
+      <div class="seg">
+        <button type="button" data-kind="here" aria-pressed="${s.kind === 'here'}">${net.role === 'host' ? 'This device' : 'Person'}</button>
+        ${net.guests.map(g => `<button type="button" data-dev="${g.id}" aria-pressed="${s.kind === 'guest' && s.dev === g.id}">${esc(g.name)}</button>`).join('')}
+        <button type="button" data-kind="cpu" aria-pressed="${s.kind === 'cpu'}">Plays itself</button>
+        <button type="button" data-kind="off" aria-pressed="${s.kind === 'off'}">Not playing</button>
+      </div></div>`).join('');
+  const n = seats.filter(s => s.kind !== 'off').length;
+  $('#start').disabled = n < 2;
+  $('#setupNote').textContent = n < 2 ? 'At least two colours must play.' : '';
+  if (net.role === 'host') {
+    $('#joined').textContent = net.guests.length ? `Joined: ${net.guests.map(g => g.name).join(', ')}.` : 'Nobody has joined yet.';
+    send({ t: 'lobby', host: net.name, guests: net.guests });
+  }
+}
+$('#seats').addEventListener('input', e => { seats[e.target.closest('.seat').dataset.i].name = e.target.value; });
+$('#seats').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const s = seats[b.closest('.seat').dataset.i];
+  if (b.dataset.dev) { s.kind = 'guest'; s.dev = +b.dataset.dev; s.name = net.guests.find(g => g.id === s.dev).name; }
+  else { s.kind = b.dataset.kind; s.dev = null; }
+  renderSetup();
+});
+$('#start').addEventListener('click', () => {
+  const players = seats.filter(s => s.kind !== 'off').map(s => ({ col: s.col, name: s.name.trim() || COLOURS[s.col].name, cpu: s.kind === 'cpu', dev: s.kind === 'guest' ? s.dev : null }));
+  newGame(players);
+  $('#setup').hidden = true; $('#game').hidden = false;
+  advance();
+});
+
+// a seat played on this device
+const here = p => !p.cpu && (net.role === 'guest' ? p.dev === net.id : !p.dev);
+
+// after every change: computer turns run, guests are told, the page is drawn
+function advance() {
+  clearTimeout(ui.timer);
+  const p = G.players[G.turn];
+  if (net.role !== 'guest' && G.phase !== 'over' && p.cpu) ui.timer = setTimeout(() => { act(...cpuPlan()); advance(); }, cpuDelay());
+  share();
+  render();
+}
+
+// a click here: a guest sends it to the host, everyone else plays it
+function click(name, arg) {
+  if (net.role === 'guest') return send({ t: 'act', to: net.hostId, act: name, arg });
+  if (act(name, arg)) advance();
+}
+
+const SHAPE = 'M-15,-4 h9 v-10 h12 v10 h9 v20 h-10 a5,5 0 0 0 -10,0 h-10 z';
+const centreOf = ([r, c]) => [c * 100 + 50, r * 100 + 50];
+
+function render() {
+  const p = G.players[G.turn], mineNow = here(p) && G.phase !== 'over';
+  const moves = mineNow && G.phase === 'act' ? legalMoves() : [];
+  const targets = mineNow && G.phase === 'card' && G.card.targets ? G.card.targets : [];
+
+  // the travellers: alone in the middle of a square, a rider up and to the right of what it rides,
+  // and in the centre and the camps, side by side
+  const groups = new Map();
+  for (const t of G.trav) {
+    const k = keyAt(t, t.pos);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(t);
+  }
+  if (ui.gameId !== G.id) { ui.gameId = G.id; ui.drawn = new Map(); ui.pos = new Map(); ui.turnKey = ''; }
+  const before = ui.drawn, beforePos = ui.pos;
+  ui.drawn = new Map(); ui.pos = new Map(G.trav.map(t => [t.id, t.pos]));
+  let svg = '';
+  const moving = new Map(moves.map(m => [m.t.id, m]));
+  const aimed = new Map(targets.map((x, i) => [x.t, i]).filter(([id]) => id != null));
+  for (const [k, list] of groups) {
+    const [x0, y0] = [(k % 9) * 100 + 50, Math.floor(k / 9) * 100 + 50];
+    const shared = k === 40 || list[0].pos === CAMP;
+    const ordered = shared ? list : [...list].sort((a, b) => (a.on != null) - (b.on != null));
+    ordered.forEach((t, i) => {
+      let x = x0, y = y0, s = 1.25;
+      if (shared) { s = .78; x = x0 - 30 + (i % 3) * 30; y = y0 - 26 + Math.floor(i / 3) * 26; }
+      else if (ordered.length === 2) { x = x0 + (i ? 14 : -12); y = y0 + (i ? -14 : 12); }
+      const can = moving.has(t.id) || aimed.has(t.id);
+      const label = `${tname(t)}, ${where(t.pos)}${t.frozen ? ', frozen' : ''}${t.on != null ? `, riding on ${tname(G.trav[t.on])}` : ''}`;
+      ui.drawn.set(t.id, { x, y, s });
+      svg += `<g class="trav${can ? ' can' : ''}" data-id="${t.id}" transform="translate(${x} ${y}) scale(${s})" ${can ? 'tabindex="0" role="button"' : ''} aria-label="${esc(label)}"><g class="hop">
+        <circle class="halo" r="24"/>
+        <path d="${SHAPE}" fill="${COLOURS[t.col].hex}" stroke="#111" stroke-width="1.6" opacity="${t.frozen ? .55 : 1}"/>
+        <text y="9" text-anchor="middle" font-family="Roboto Mono, monospace" font-size="11" fill="#111">${t.k + 1}</text>
+        ${t.frozen ? '<circle r="21" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="3 4"/>' : ''}
+        <title>${esc(label)}</title></g></g>`;
+    });
+  }
+  const [cr, cc] = PATHS[p.col][CAMP], cx = cc * 100, cy = cr * 100;
+  const camp = G.phase === 'over' ? '' : `<rect class="camp-mark" x="${cx + 5}" y="${cy + 5}" width="90" height="90" style="stroke:${COLOURS[p.col].hex}"/><text class="camp-label" x="${cx + 50}" y="${cy + 56}" text-anchor="middle">CAMP</text>`;
+  $('#pieces').innerHTML = camp + '<g id="destLayer"></g>' + svg;
+  const took = animateMoves(before, beforePos);
+  announceTurn(took);
+
+  renderPanel(p, mineNow, moves);
+  renderTeams();
+  renderDecks();
+  $('#log ol').innerHTML = G.log.map(l => `<li>${esc(l)}</li>`).join('');
+  if (G.phase === 'over') showOver();
+}
+
+// a traveller that moved steps square by square along its path; anything else moved slides; returns ms taken
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function animateMoves(before, beforePos) {
+  if (!before.size || reduced) return 0;
+  let longest = 0;
+  const STEP = 170;
+  for (const t of G.trav) {
+    const was = before.get(t.id), now = ui.drawn.get(t.id), from = beforePos.get(t.id);
+    if (!was || !now || (was.x === now.x && was.y === now.y)) continue;
+    const g = $(`#pieces .trav[data-id="${t.id}"] .hop`); if (!g) continue;
+    // the squares passed through: along its own path, or along the path of the traveller carrying it
+    const lead = G.moved && (G.moved.id === t.id ? t : t.on === G.moved.id ? G.trav[G.moved.id] : null);
+    let pts = [[was.x, was.y]];
+    if (lead && lead.pos !== G.moved.from) {
+      const dir = Math.sign(lead.pos - G.moved.from);
+      for (let i = G.moved.from + dir; i !== lead.pos; i += dir) pts.push(centreOf(PATHS[lead.col][i]));
+    }
+    pts.push([now.x, now.y]);
+    const frames = pts.map(([x, y]) => ({ transform: `translate(${(x - now.x) / now.s}px, ${(y - now.y) / now.s}px)` }));
+    const ms = Math.max(350, (pts.length - 1) * STEP);
+    g.animate(frames, { duration: ms, easing: 'ease-in-out' });
+    longest = Math.max(longest, ms);
+  }
+  return longest;
+}
+
+// a banner over the board when the turn passes, or the same player rolls again
+function announceTurn(delay) {
+  if (G.phase === 'over') return;
+  const again = G.phase === 'roll' && /rolls again\.$/.test(G.log[0] || '');
+  const key = `${G.turn}|${again ? G.log.length : ''}`;
+  if (key === ui.turnKey) return;
+  const first = !ui.turnKey; ui.turnKey = key;
+  if (first) return;
+  const p = G.players[G.turn], hex = COLOURS[p.col].hex, b = $('#turnBanner');
+  clearTimeout(ui.bannerTimer);
+  ui.bannerTimer = setTimeout(() => {
+    b.innerHTML = `<span style="border-color:${hex}"><i style="background:${hex}"></i>${esc(p.name)}${again ? ' rolls again' : `'s turn`}</span>`;
+    b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
+  }, delay);
+}
+
+function die(n) {
+  const pips = { 1: [[50, 50]], 2: [[30, 30], [70, 70]], 3: [[28, 28], [50, 50], [72, 72]], 4: [[30, 30], [70, 30], [30, 70], [70, 70]],
+    5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]], 6: [[30, 26], [70, 26], [30, 50], [70, 50], [30, 74], [70, 74]] }[n] || [];
+  const face = n ? pips.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="8" fill="#eee"/>`).join('')
+    : '<text x="50" y="68" text-anchor="middle" font-family="EB Garamond, Georgia, serif" font-size="54" fill="#eee">?</text>';
+  return `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="6" y="6" width="88" height="88" rx="16" fill="#111"/>${face}</svg>`;
+}
+
+function status(t) {
+  const W = G.roll, B = force(t.pos), rider = riderOf(t);
+  if (t.pos === CAMP) return 'in camp ✓';
+  if (t.frozen) return 'frozen by a curse: cannot move';
+  const pull = t.pos === 0 ? 'the centre pulls 5' : t.pos >= OUT ? 'on the edge, no pull' : `${where(t.pos)} pulls ${B}`;
+  const extra = `${rider ? `, carrying ${tname(rider)}` : ''}${t.on != null ? `, riding on ${tname(G.trav[t.on])}` : ''}`;
+  if (G.phase !== 'act') return pull + extra;
+  if (t.pos === 0) return W === 6 ? 'the centre: your 6 gets it out → forward 6' : 'the centre: only a 6 gets it out';
+  if (W === B) return `${pull} · your ${W} is the same → stays`;
+  const m = moveFor(t, W), heavy = rider ? ' (heavy: carrying a rider)' : '';
+  if (!m) return `${pull} · ${rider && ((W > B && !FORWARD_WITH_RIDER[W]) || (W < B && !BACK_WITH_RIDER[W])) ? 'too heavy to move' : 'blocked: it would land on your own traveller or a full square'}`;
+  const n = Math.abs(m.to - m.from);
+  if (m.to < m.from && !legalMoves().some(x => x.t === t)) return `${pull} · your ${W} is weaker → would be pulled back, but another can go forward`;
+  return m.to > m.from ? `${pull} · your ${W} beats it → forward ${n}${heavy}` : `${pull} · your ${W} is weaker → pulled back ${n}${heavy}`;
+}
+
+function renderPanel(p, mineNow, moves) {
+  const col = COLOURS[p.col], kind = p.dev && net.role === 'host' ? `on ${esc(net.guests.find(g => g.id === p.dev)?.name || 'a guest')}'s device` : '';
+  let html = `<div class="who"><span class="swatch" style="background:${col.hex};width:22px;height:22px"></span><div><div class="name">${esc(p.name)}</div><div class="kind">${kind}</div></div>
+    </div>`;
+  if (G.phase === 'roll') html += mineNow
+    ? `<button type="button" id="oracle" class="roll">${die(0)}<span>Roll the Oracle<small>Your Whiteforce for this turn</small></span></button>`
+    : `<p class="prompt waiting">${esc(p.name)} is rolling the Oracle…</p>`;
+  if (G.phase === 'act' || G.phase === 'card') html += `<div class="rolled">${die(G.roll)}<div>Whiteforce<b>${G.roll}</b></div></div>`;
+  if (G.phase === 'act') {
+    html += `<ul class="status">${mine(G.turn).map(t => `<li><b>${tname(t)}</b><span>${status(t)}</span></li>`).join('')}</ul>`;
+    if (mineNow) {
+      html += `<p class="prompt">${moves.length ? (moves[0].to > moves[0].from ? '<b>Tap a glowing traveller</b> on the board to move it. A dashed square shows where it will land.' : 'None can go forward, so one must be pulled back: <b>tap a glowing traveller</b>.') : 'No traveller can move this turn.'}</p><div class="buttons">`;
+      if (canDraw()) html += `<button type="button" data-card="charm" ${deckSize('charm') ? '' : 'disabled'}>Spend a coin: draw a charm</button><button type="button" data-card="curse" ${deckSize('curse') ? '' : 'disabled'}>Spend a coin: draw a curse</button>`;
+      if (!moves.length) html += `<button type="button" data-skip="1">${G.roll === 6 ? 'Keep the coin and roll again' : 'Pass'}</button>`;
+      html += '</div>';
+    } else html += `<p class="prompt">Waiting for ${esc(p.name)} to move.</p>`;
+  }
+  if (G.phase === 'card') {
+    const c = G.card, [kind2, text] = CARDS[c.name];
+    html += `<figure class="cardface"><img src="cards/${slug(c.name)}.jpg" alt="${esc(c.name)}, a ${kind2} card: ${esc(text)}"></figure>`;
+    if (!mineNow) html += `<p class="prompt">Waiting for ${esc(p.name)}.</p>`;
+    else if (c.targets && c.targets.length) {
+      html += c.targets[0].p != null
+        ? `<p class="prompt">Choose a player.</p><div class="buttons">${c.targets.map((x, i) => `<button type="button" data-target="${i}">${esc(G.players[x.p].name)}</button>`).join('')}</div>`
+        : '<p class="prompt">Tap a glowing traveller.</p>';
+    } else html += `<p class="prompt">${c.targets ? 'It has nothing to act on.' : ''}</p><div class="buttons"><button type="button" data-use="1">${c.targets ? 'Set it aside' : 'Play it'}</button></div>`;
+  }
+  if (G.phase === 'over') html += `<p class="prompt"><b>${esc(G.players[G.winner].name)}</b> has escaped the dark waters.</p>`;
+  $('#panel').innerHTML = html;
+}
+
+function renderTeams() {
+  $('#teams').innerHTML = '<h3>The travellers</h3>' + G.players.map((p, i) => {
+    const ts = mine(i), inCamp = ts.filter(t => t.pos === CAMP).length;
+    return `<div class="team${i === G.turn && G.phase !== 'over' ? ' now' : ''}"><span class="swatch" style="background:${COLOURS[p.col].hex}"></span>
+      <span>${esc(p.name)}</span>
+      <span class="coins" aria-label="${p.coins} coins left">${[0, 1, 2].map(k => `<i style="background:${k < p.coins ? COLOURS[p.col].hex : 'transparent'}"></i>`).join('')}</span>
+      <span class="where">${inCamp} in camp · ${ts.filter(t => t.pos < CAMP).map(t => `${t.k + 1} ${where(t.pos)}${t.frozen ? ' (frozen)' : ''}`).join(' · ') || 'all escaped'}</span></div>`;
+  }).join('');
+}
+
+function renderDecks() {
+  $('#decksBox').innerHTML = `<h3>Charms and curses</h3><div class="decks">
+    <figure class="${deckSize('charm') ? '' : 'gone'}"><img src="charm-back.jpg" alt="The charm deck">${deckSize('charm')} charms</figure>
+    <figure class="${deckSize('curse') ? '' : 'gone'}"><img src="curse-back.jpg" alt="The curse deck">${deckSize('curse')} curses</figure></div>
+    <p class="soft" style="margin:8px 0 0;font-size:.92rem">${G.used.length ? `Played: ${G.used.map(esc).join(', ')}.` : 'A coin buys a card, only on a six.'}</p>`;
+}
+
+function showOver() {
+  const w = G.players[G.winner];
+  $('#overSheet').innerHTML = `<h2>${esc(w.name)} escapes</h2><p>All three of ${esc(w.name)}'s travellers have reached their camp.</p>
+    <div class="buttons">${net.role === 'guest' ? '<span class="soft">The host can start another game.</span>' : '<button type="button" class="go" data-again="1">Play again</button><button type="button" data-setup="1">Change the players</button>'}
+    <button type="button" data-close="1">Look at the board</button></div>
+    <p><a href="${FORM}" data-form="1">Tell me how the game went</a></p>`;
+  $('#over').hidden = false;
+}
+// the form opens over the end screen; its frame loads only when first opened
+const FORM = 'https://forms.prayasabhinav.net/f/play-blackpool';
+$('#formClose').addEventListener('click', () => $('#formDialog').close());
+$('#over').addEventListener('click', e => {
+  if (e.target.closest('a[data-form]')) {
+    e.preventDefault();
+    if (!$('#formFrame').src) $('#formFrame').src = FORM;
+    return $('#formDialog').showModal();
+  }
+  const b = e.target.closest('button'); if (!b) return;
+  $('#over').hidden = true;
+  if (b.dataset.again) { newGame(G.players.map(({ col, name, cpu, dev }) => ({ col, name, cpu, dev }))); advance(); }
+  if (b.dataset.setup) { clearTimeout(ui.timer); G = null; $('#game').hidden = true; $('#setup').hidden = false; renderSetup(); }
+});
+
+$('#panel').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || b.disabled) return;
+  if (b.id === 'oracle') return click('roll');
+  if (b.dataset.card) return click('card', b.dataset.card);
+  if (b.dataset.skip) return click('skip');
+  if (b.dataset.target) return click('target', +b.dataset.target);
+  if (b.dataset.use) return click('use');
+});
+
+function travClicked(g) {
+  if (!g || !g.classList.contains('can')) return;
+  const id = +g.dataset.id;
+  if (G.phase === 'act') click('move', id);
+  else if (G.phase === 'card') click('target', G.card.targets.findIndex(x => x.t === id));
+}
+$('#pieces').addEventListener('click', e => travClicked(e.target.closest('.trav')));
+$('#pieces').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); travClicked(e.target.closest('.trav')); } });
+// where a glowing traveller would land
+$('#pieces').addEventListener('pointerover', e => {
+  const g = e.target.closest('.trav.can'), layer = $('#destLayer');
+  if (!layer) return;
+  layer.innerHTML = '';
+  if (!g || G.phase !== 'act') return;
+  const m = legalMoves().find(m => m.t.id === +g.dataset.id);
+  if (!m) return;
+  const [x, y] = centreOf(PATHS[m.t.col][m.to]);
+  layer.innerHTML = `<rect class="dest" x="${x - 46}" y="${y - 46}" width="92" height="92"/>`;
+});
+
+// ---------- separate devices ----------
+// One device hosts: it runs the game and sends everyone the table. Guests send their clicks back.
+
+const RELAY = 'wss://games-relay.prayasabhinav.net/blackpool-';
+const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+function connect(code, hear) {
+  net.ws = new WebSocket(RELAY + code);
+  net.ws.onmessage = e => hear(JSON.parse(e.data));
+}
+function send(m) { if (net.ws && net.ws.readyState === 1) net.ws.send(JSON.stringify(m)); }
+function share() {
+  if (net.role !== 'host' || !G) return;
+  send({ t: 'state', view: { ...G, decks: { charm: G.decks.charm.length, curse: G.decks.curse.length } } });
+}
+
+$('#host').addEventListener('click', () => {
+  const code = Array.from({ length: 5 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join('');
+  net.role = 'host'; net.name = $('#hostName').value.trim() || 'The host';
+  connect(code, hostHears);
+  const url = `${location.origin}${location.pathname}?room=${code}`;
+  $('#code').textContent = code; $('#link').href = $('#link').textContent = url;
+  $('#hostRow').hidden = true; $('#hosting').hidden = false;
+  renderSetup();
+});
+$('#copy').addEventListener('click', () => navigator.clipboard?.writeText($('#link').href).then(() => { $('#copy').textContent = 'Copied'; }));
+
+function hostHears(m) {
+  if (m.t === 'welcome') net.id = m.id;
+  else if (m.t === 'hello') {
+    net.guests.push({ id: m.from, name: String(m.name || '').trim().slice(0, 20) || 'A guest' });
+    G ? share() : renderSetup();
+  } else if (m.t === 'left' && m.from === undefined) {          // only the relay's own notice has no sender
+    const g = net.guests.find(x => x.id === m.id); if (!g) return;
+    net.guests = net.guests.filter(x => x !== g);
+    for (const s of seats) if (s.dev === m.id) { s.kind = 'cpu'; s.dev = null; }
+    if (G) { for (const p of G.players) if (p.dev === m.id) { p.dev = null; p.cpu = true; } say(`${g.name} left. Their travellers play on by themselves.`); advance(); }
+    else renderSetup();
+  } else if (m.t === 'act' && G && G.players[G.turn].dev === m.from && !G.players[G.turn].cpu) {
+    if (act(m.act, m.arg)) advance();
+  }
+}
+
+function joinGame(code) {
+  net.role = 'guest';
+  $('#setup').hidden = true; $('#join').hidden = false; $('#joinCode').textContent = code;
+  $('#joinBtn').addEventListener('click', () => {
+    net.name = $('#joinName').value.trim();
+    if (!net.name) return $('#joinName').focus();
+    $('#joinForm').hidden = true; $('#joinSay').textContent = 'Joining…';
+    connect(code, guestHears);
+    net.ws.onclose = () => gone('The connection to the game was lost.');
+  });
+}
+function guestHears(m) {
+  if (m.t === 'welcome') {
+    net.id = m.id;
+    if (!m.peers.length) return gone('No game is open with this code.');
+    net.hostId = Math.min(...m.peers);                               // the host made the room, so it has the lowest id in it
+    send({ t: 'hello', name: net.name });
+    return;
+  }
+  if (m.from !== undefined && m.from !== net.hostId) return;        // a guest listens only to the host
+  if (m.t === 'lobby') { $('#joinSay').textContent = `${m.host} is setting up the game. Here so far: ${m.guests.map(g => g.name).join(', ')}.`; }
+  if (m.t === 'state') {
+    G = m.view;
+    $('#join').hidden = true; $('#game').hidden = false;
+    $('#over').hidden = G.phase !== 'over';
+    render();
+  }
+  if (m.t === 'left' && m.from === undefined && m.id === net.hostId) gone('The host has left the game.');
+}
+function gone(text) {
+  if (net.ws) { net.ws.onclose = null; net.ws.close(); }
+  $('#game').hidden = true; $('#join').hidden = false; $('#joinForm').hidden = true;
+  $('#joinSay').textContent = text; $('#back').hidden = false;
+}
+$('#back').addEventListener('click', () => location.assign(location.pathname));
+
+const room = (new URLSearchParams(location.search).get('room') || '').toUpperCase();
+if (room.length === 5 && [...room].every(c => CODE_CHARS.includes(c))) joinGame(room);
+else renderSetup();
+</script>
+</body>
+</html>

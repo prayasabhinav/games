@@ -475,7 +475,8 @@ const mine = i => owner[i] === (net.role === 'guest' ? net.id : 0);
 const canAct = () => !cur().cpu && mine(G.turn);
 const kind = i => G.players[i].cpu ? 'computer' : net.role ? names[owner[i]] : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
-function later(fn, ms){ const game = G; setTimeout(() => { if (G === game) fn(); }, ms); }
+// waits are stretched a little at random, so the computer does not move like a metronome
+function later(fn, ms){ const game = G; setTimeout(() => { if (G === game) fn(); }, ms * (1 + Math.random() * .3)); }
 function note(text){ lines.unshift(text); lines.length = Math.min(lines.length, 40); }
 
 function pieceSvg(x, y, s, pat, owner, face, disc){
@@ -631,7 +632,7 @@ function startTurn(){
   phase = 'roll'; sel = {};
   if (!cur().cpu && G.timer) startTimer();
   render();
-  if (cur().cpu) later(roll, 700);
+  if (cur().cpu) later(roll, 2200);
 }
 function roll(){
   if (phase !== 'roll') return;
@@ -640,7 +641,7 @@ function roll(){
   if (!still) $('#dieBody').animate([{transform:'rotate(0)'}, {transform:'rotate(480deg)'}], {duration:400, easing:'ease-out'});
   if (cur().cpu){
     render();
-    later(cpuMove, 600);
+    later(cpuMove, 2600);
   } else {
     const moves = legalMoves(G), first = moves.find(m => m.type === 'add');
     sel = first ? {action:'add', pat:first.pat} : {action:'turn'};
@@ -651,7 +652,7 @@ function cpuMove(){
   const m = aiChoose(G);
   sel = {action:m.type, pat:m.pat, sq:m.sq};
   render();
-  later(() => play(m), 750);
+  later(() => play(m), 2000);
 }
 function play(m){
   if (phase !== 'act') return;
@@ -663,7 +664,7 @@ function play(m){
   if (G.over) phase = 'over';
   render();
   if (G.over) return finish();
-  later(() => { endTurn(G); startTurn(); }, res.gone.length ? 1500 : 650);
+  later(() => { endTurn(G); startTurn(); }, res.gone.length ? 3600 : 1700);
 }
 function describe(res){
   const p = G.players[res.by], m = res.move;
