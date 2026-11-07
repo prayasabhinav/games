@@ -130,9 +130,33 @@ main { position: relative; z-index: 1; }
   max-width: 24rem;
   color: rgba(248, 244, 236, .88);
 }
+.play {
+  display: inline-flex;
+  align-items: center;
+  gap: .45em;
+  margin-top: 2rem;
+  font-family: var(--thin);
+  font-weight: 500;
+  font-size: clamp(2.4rem, 3.6vw, 3.3rem);
+  line-height: 1;
+  color: var(--ink);
+  background: var(--gold);
+  padding: .32em 1.05em .3em .85em;
+  border-radius: 999px;
+  border: 6px solid #fff;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, .5);
+  text-decoration: none;
+  transform: rotate(-3deg);
+  transition: transform .6s cubic-bezier(.2, .7, .2, 1);
+}
+.play::before { content: ""; width: .6em; height: .7em; background: currentColor; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.play:hover, .play:focus-visible { transform: rotate(0deg) scale(1.05); }
+.title .play-note { margin: 1rem 0 0; font-size: 1.1rem; max-width: 22rem; }
+.play.small { margin: 0 0 8px; font-size: 1.5rem; border-width: 4px; box-shadow: 0 8px 18px rgba(0, 0, 0, .25); }
+.sheet .play-again { margin: 0 0 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
 .board { width: min(42vw, 620px); left: 45%; top: 12%; --r: 4deg; padding: 10px; border-radius: 18px; z-index: 2; }
-.c1 { width: 150px; left: 5%;  top: 60%; --r: -9deg; }
-.c2 { width: 150px; left: 16%; top: 66%; --r: 6deg; }
+.c1 { width: 150px; left: 5%;  top: 64%; --r: -9deg; }
+.c2 { width: 150px; left: 16%; top: 67%; --r: 6deg; }
 .c3 { width: 140px; left: 28%; top: 57%; --r: -4deg; }
 .c4 { width: 150px; left: 86%; top: 56%; --r: 11deg; z-index: 3; }
 .c5 { width: 130px; left: 40%; top: 7%;  --r: -14deg; z-index: 3; }
@@ -144,7 +168,7 @@ main { position: relative; z-index: 1; }
 .l3 { left: 50%; top: 86%; --r: -3deg; background: var(--card-yellow); }
 .l4 { left: 6%;  top: 90%; --r: 4deg;  background: var(--vermilion); color: #fff; }
 .l5 { left: 82%; top: 88%; --r: -8deg; background: var(--card-red); }
-.l6 { left: 4%;  top: 49%; --r: 3deg;  background: var(--cobalt); color: #fff; }
+.l6 { left: 32%; top: 34%; --r: 3deg;  background: var(--cobalt); color: #fff; }
 .l7 { left: 88%; top: 44%; --r: -12deg; background: var(--sheet); }
 .l8 { left: 22%; top: 92%; --r: -5deg; background: var(--card-green); }
 .l9 { left: 22%; top: 2%;  --r: -4deg; background: var(--red); color: #fff; }
@@ -260,7 +284,9 @@ main { position: relative; z-index: 1; }
   <div class="table">
     <div class="title">
       <h1>Matbhed<span>મતભેદ · मतभेद</span></h1>
-      <p>A board game about Article 25 of the Constitution of India, the freedom of religion. Free to print and change, or <a href="play/">play it in your browser</a>.</p>
+      <p>A board game about Article 25 of the Constitution of India, the freedom of religion. Free to print and change.</p>
+      <a class="play" href="play/">Play</a>
+      <p class="play-note">In your browser, on one screen or each on your own phone. No sign-in.</p>
     </div>
 
     <a class="sticker board" href="matbhed-board.pdf" title="The board, 18 × 18 inches"><img src="page/board.jpg" alt="The Matbhed board: a square maze with red, yellow and green boxes, its name in Gujarati, Hindi and English on four sides" width="1400" height="1400"></a>
@@ -317,6 +343,7 @@ main { position: relative; z-index: 1; }
 
     <section>
       <h2>Print it</h2>
+      <p class="play-again"><a class="play small" href="play/">Play in your browser</a> <span>or print the files below.</span></p>
       <ul class="files">
         <li style="--dot: var(--ink)"><div><a href="matbhed-board.pdf">The board</a><span>PDF, 18 × 18 inches; it was first printed on canvas</span></div></li>
         <li style="--dot: var(--card-red)"><div><a href="cards/matbhed-cards-english.pdf">The cards in English</a><span>PDF, 53 cards, one to a page, 2.5 × 3.5 inches: 20 red, 20 yellow, 13 green</span></div></li>

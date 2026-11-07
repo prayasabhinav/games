@@ -1,5 +1,9 @@
 # Matbhed | મતભેદ | मतभेद
 
+## [▶ Play Matbhed in your browser](https://prayasabhinav.github.io/games/matbhed/play/)
+
+On one screen or each on your own phone. No sign-in.
+
 A board game about Article 25 of the Constitution of India, the freedom of religion. Jaskaran Singh and I designed it in 2023 for Conflictorium's Re-Art25 project in Ahmedabad. Players move through a maze, and each coloured box they land on gives them a card describing a situation to respond to: a temple, a marriage, a law, a court case. A Judge scores every answer.
 
 ![The Matbhed board](matbhed-board.jpg)

@@ -111,6 +111,32 @@ main { position: relative; }
   text-transform: uppercase;
 }
 .title p { margin: 1.6rem 0 0; font-size: 1.3rem; max-width: 24rem; color: #0f2a40; }
+.play {
+  display: inline-flex;
+  align-items: center;
+  gap: .5em;
+  margin-top: 2rem;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: clamp(2.2rem, 3.4vw, 3rem);
+  line-height: 1;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--red);
+  padding: .5em 1.15em .32em .95em;
+  border-radius: 999px;
+  border: 6px solid #fff;
+  box-shadow: 0 16px 32px rgba(16, 40, 60, .4);
+  text-decoration: none;
+  transform: rotate(-2deg);
+  transition: transform .5s cubic-bezier(.2, .7, .2, 1);
+}
+.play::before { content: ""; width: .62em; height: .72em; margin-bottom: .12em; background: currentColor; clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.play:hover, .play:focus-visible { transform: rotate(0deg) scale(1.05); }
+.title .play-note { margin: 1rem 0 0; font-size: 1.05rem; max-width: 22rem; }
+.play.small { margin: 0 0 8px; font-size: 1.2rem; letter-spacing: .05em; white-space: nowrap; border-width: 4px; box-shadow: 0 8px 18px rgba(16, 40, 60, .25); }
+.sheet .play-again { margin: 0 0 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
 .board { width: min(22vw, 300px); left: 50%; top: 6%; --r: -4deg; z-index: 2; }
 .three { width: 230px; left: 72%; top: 14%; --r: 7deg; z-index: 3; }
 .p1 { width: 120px; left: 6%;  top: 58%; --r: -8deg; }
@@ -123,7 +149,7 @@ main { position: relative; }
 .l4 { left: 6%;  top: 86%; --r: 4deg;  background: var(--yellow); color: var(--ink); }
 .l5 { left: 30%; top: 84%; --r: -5deg; background: var(--navy); }
 .l6 { left: 78%; top: 84%; --r: 8deg;  background: #fff; color: var(--ink); border-color: var(--ink); }
-.l7 { left: 6%;  top: 46%; --r: -4deg; background: var(--red); }
+.l7 { left: 33%; top: 24%; --r: -4deg; background: var(--red); }
 .d4  { left: 52%; top: 80%; --r: 12deg; }
 
 .sheet {
@@ -178,7 +204,9 @@ main { position: relative; }
   <div class="table">
     <div class="title">
       <h1>3 Quarters</h1>
-      <p>A board game of quarter circles, made in 2022 as a warm-up for students. Free to print and change, or <a href="play/">play it in your browser</a>.</p>
+      <p>A board game of quarter circles, made in 2022 as a warm-up for students. Free to print and change.</p>
+      <a class="play" href="play/">Play</a>
+      <p class="play-note">In your browser, on one screen or each on your own phone. No sign-in.</p>
     </div>
 
     <a class="sticker board" href="3-quarters-board.pdf" title="The board"><img src="page/board.jpg" alt="The 3 Quarters board: 24 squares in 8 rows of 3, four rows red, three green and one blue, three of the squares yellow, on a pale blue sky" width="640" height="1408"></a>
@@ -229,6 +257,7 @@ main { position: relative; }
 
     <section>
       <h2>Print it</h2>
+      <p class="play-again"><a class="play small" href="play/">Play in your browser</a> <span>or print the files below.</span></p>
       <ul class="files">
         <li style="--dot: var(--red)"><div><a href="3-quarters-board.pdf">The board</a><span>PDF, one page, 10 × 22 inches</span></div></li>
         <li style="--dot: var(--ink)"><div><a href="3-quarters-pieces.pdf">The pieces</a><span>PDF, two pages, eight pieces for each of four players, to cut out</span></div></li>

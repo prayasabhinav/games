@@ -1,5 +1,15 @@
 # Games by Prayas Abhinav
 
+## Play in your browser
+
+### [▶ Play 3 Quarters](https://prayasabhinav.github.io/games/3-quarters/play/)
+
+### [▶ Play All or Nothing](https://prayasabhinav.github.io/games/all-or-nothing/play/)
+
+### [▶ Play Matbhed](https://prayasabhinav.github.io/games/matbhed/play/)
+
+On one screen or each on your own phone. No sign-in. Each game also has a page with its rules and print files: [3 Quarters](https://prayasabhinav.github.io/games/3-quarters/), [All or Nothing](https://prayasabhinav.github.io/games/all-or-nothing/) and [Matbhed](https://prayasabhinav.github.io/games/matbhed/).
+
 Games I designed, with their rules and the files to print and play them.
 
 - **3 Quarters** (2022): a board game I made as a warm-up for students. Players place, turn and remove quarter-circle pieces on a printed board to complete three-quarter circles, and score the points on the pieces. The first to 25 wins.
@@ -26,6 +36,8 @@ The game's page: https://prayasabhinav.github.io/games/3-quarters/
 You also need a four-sided die and a phone to time each move.
 
 ## All or Nothing
+
+The game's page: https://prayasabhinav.github.io/games/all-or-nothing/
 
 | File | What it is |
 |---|---|
