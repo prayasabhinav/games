@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Games by Prayas Abhinav</title>
+<meta name="description" content="Five games by Prayas Abhinav, from 2011 to 2023. Each plays in your browser, on one screen or each on your own phone, with its rules and the files to print it.">
+<meta property="og:title" content="Games by Prayas Abhinav">
+<meta property="og:image" content="https://prayasabhinav.github.io/games/common/blackpool.webp">
+<style>
+:root { --ink: #161616; --soft: #5c5c58; --line: #ddddd8; --ground: #f7f6f2; }
+* { box-sizing: border-box; }
+html, body { background: var(--ground); }
+body { margin: 0; color: var(--ink); font: 17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 48px 72px; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 0 0 12px; }
+.lead { max-width: 40rem; color: var(--soft); margin: 0 0 40px; }
+.games { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 28px; }
+.game { background: #fff; border: 1px solid var(--line); display: flex; flex-direction: column; }
+.game img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: contain; background: #fff; border-bottom: 1px solid var(--line); }
+.game .body { padding: 16px 18px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.game h2 { font-size: 1.3rem; margin: 0; }
+.game h2 span { font-weight: 400; color: var(--soft); }
+.game p { margin: 0; font-size: .95rem; flex: 1; }
+.links { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.links a { font-weight: 600; text-decoration: none; padding: 8px 14px; border: 1px solid var(--ink); color: var(--ink); }
+.links a.play { background: var(--ink); color: #fff; }
+.links a:hover { opacity: .85; }
+footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--soft); font-size: .92rem; }
+footer a { color: inherit; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Games by Prayas Abhinav</h1>
+  <p class="lead">Games I designed, from 2011 to 2023. Each one plays in your browser, on one screen or each on your own phone, with no sign-in. Each has a page with its rules and the files to print and play it.</p>
+  <div class="games">
+    <article class="game">
+      <img src="common/decay-of-meaning.webp" alt="The Decay of Meaning: two runners on a small planet among floating words, on a blue sky with clouds" loading="lazy">
+      <div class="body">
+        <h2>The Decay of Meaning <span>2011</span></h2>
+        <p>Two avatars of me chase each other round a planet, and each word one eats changes its speed. Shown at <i>Words: a user's manual</i>, Exhibit 320, New Delhi, and kept as the 2011 game.</p>
+        <div class="links"><a class="play" href="decay-of-meaning/play/">▶ Play</a><a href="decay-of-meaning/">The game</a></div>
+      </div>
+    </article>
+    <article class="game">
+      <img src="common/blackpool.webp" alt="The Blackpool board: rings of squares closing in on a centre" loading="lazy">
+      <div class="body">
+        <h2>Blackpool <span>2019</span></h2>
+        <p>Two to four players race three travellers each out of a whirlpool whose rings pull them back. Made with Priyamvada Gaur.</p>
+        <div class="links"><a class="play" href="blackpool/play/">▶ Play</a><a href="blackpool/">The game</a></div>
+      </div>
+    </article>
+    <article class="game">
+      <img src="common/all-or-nothing.webp" alt="The All or Nothing box, a card and the rules leaflet" loading="lazy">
+      <div class="body">
+        <h2>All or Nothing <span>2020</span></h2>
+        <p>A card game for 2 to 4 players about completing a 12-slice pizza, adding and taking away slices with number cards.</p>
+        <div class="links"><a class="play" href="all-or-nothing/play/">▶ Play</a><a href="all-or-nothing/">The game</a></div>
+      </div>
+    </article>
+    <article class="game">
+      <img src="common/3-quarters.webp" alt="The 3 Quarters board: a grid of quartered circles, one quarter in yellow" loading="lazy">
+      <div class="body">
+        <h2>3 Quarters <span>2022</span></h2>
+        <p>A board game I made as a warm-up for students: place, turn and remove quarter-circle pieces to complete three-quarter circles.</p>
+        <div class="links"><a class="play" href="3-quarters/play/">▶ Play</a><a href="3-quarters/">The game</a></div>
+      </div>
+    </article>
+    <article class="game">
+      <img src="common/matbhed.webp" alt="The Matbhed board, a maze, with three of its cards" loading="lazy">
+      <div class="body">
+        <h2>Matbhed <span>2023</span></h2>
+        <p>A board game about Article 25 of the Constitution of India, the freedom of religion, made with Jaskaran Singh for Conflictorium. Cards in English and Gujarati.</p>
+        <div class="links"><a class="play" href="matbhed/play/">▶ Play</a><a href="matbhed/">The game</a></div>
+      </div>
+    </article>
+  </div>
+  <footer>
+    <p>Prayas Abhinav, teacher, artist, toolmaker. My other work: <a href="https://prayasabhinav.net/design">prayasabhinav.net/design</a>. The source of every game is on <a href="https://github.com/prayasabhinav/games">GitHub</a>; each game's page gives its licence.</p>
+  </footer>
+</div>
+</body>
+</html>
