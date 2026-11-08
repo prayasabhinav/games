@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Decay of Meaning</title>
+<meta name="description" content="The Decay of Meaning, a game by Prayas Abhinav, 2011: two avatars of the artist chase each other round a planet, their speeds changed by the words they eat. Play it in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { color-scheme: dark; --sky: #1270c8; --ink: #f2f6fb; --mist: #9fb3c8; --mono: "Roboto Mono", ui-monospace, Menlo, monospace; }
+* { box-sizing: border-box; }
+html, body { background: #071a2e; }
+body { margin: 0; color: var(--ink); font: 17px/1.6 var(--mono); }
+.wrap { max-width: 1100px; margin: 0 auto; padding-inline: 16px; padding-block: 32px 56px; }
+a { color: var(--ink); }
+img { display: block; max-width: 100%; height: auto; }
+h1 { font: 400 clamp(2.6rem, 7vw, 5rem)/1 Anton, Impact, sans-serif; margin: 0 0 18px; letter-spacing: .01em; }
+h2 { font: 400 1.9rem/1.1 Anton, Impact, sans-serif; margin: 0 0 12px; }
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 34px; align-items: center; }
+.lead { font-size: 1.05rem; max-width: 34ch; }
+.play { display: inline-block; font: 400 1.6rem/1 Anton, Impact, sans-serif; color: #071a2e; background: var(--ink); text-decoration: none; padding: 14px 36px; margin-top: 8px; }
+.play:hover { background: #fff; }
+.note { color: var(--mist); font-size: .9rem; margin-top: 10px; }
+.shot { aspect-ratio: 4 / 3; background: var(--sky) url(play/sky.jpg) center / cover; display: grid; place-items: center; }
+.shot img { width: 34%; }
+section { margin-top: 56px; border-top: 1px solid #23415f; padding-top: 22px; }
+.photos { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; }
+.photos figure { margin: 0; }
+.photos figcaption { color: var(--mist); font-size: .8rem; margin-top: 6px; }
+ul { padding-left: 1.2em; } li { margin: 6px 0; }
+footer { margin-top: 56px; color: var(--mist); font-size: .9rem; border-top: 1px solid #23415f; padding-top: 16px; }
+@media (max-width: 800px) { .hero, .photos { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero">
+  <div>
+    <h1>The Decay of Meaning</h1>
+    <p class="lead">A game I made in 2011, based on a database of value-laden words. It has two avatars of me chasing each other round a planet. Each one's speed depends on the value of the word it meets when it jumps. As the value of each word is dynamic and variable, this becomes a complex process. In a statistical analysis of literature, anything can be expressed via anything.</p>
+    <a class="play" href="play/">Play</a>
+    <p class="note">In your browser, one player against the computer. To jump, press the 1 key or the space bar, or tap the screen.</p>
+  </div>
+  <div class="shot"><img src="play/planet.png" alt="The planet: a fisheye ring of city buildings round a dark centre, on a blue sky with clouds" width="200" height="201"></div>
+</div>
+
+<section>
+  <h2>In 2011</h2>
+  <p>I showed it in 2011 at <i>Words: a user's manual</i>, an exhibition curated by Himali Singh Soin at Exhibit 320 in Lado Sarai, New Delhi. It ran on a small screen set in a wooden box on the wall, beside an oval window that asked, <i>why don't we sync our delusions, and then play the game?</i>, and it was played with one large red button.</p>
+  <div class="photos">
+    <figure><img src="page/installation.jpg" alt="The installation in the gallery: a screen in a wooden box on a white wall, a small box on a tripod, and a lit wooden cube with a red button" width="1400" height="1050" loading="lazy"><figcaption>The installation, December 2011</figcaption></figure>
+    <figure><img src="page/red-button.jpg" alt="The red button, set in the lit top of a wooden cube" width="1400" height="1050" loading="lazy"><figcaption>The button</figcaption></figure>
+    <figure><img src="page/oval-screen.jpg" alt="An oval window in a white panel showing a line of text on a dark screen" width="1400" height="1050" loading="lazy"><figcaption>The oval window</figcaption></figure>
+  </div>
+</section>
+
+<section>
+  <h2>This is the 2011 game</h2>
+  <p>The page runs the 2011 code, ported line by line from Lua, which it was written in, to JavaScript. It reads the same word file and keeps the original rules, timings and quirks. I have kept it as it was and not improved it.</p>
+  <ul>
+    <li>The runners, the planet, the sky and the words are the 2011 ones.</li>
+    <li>The lettering, the sounds and the marks that show how many lives are left are new, because the originals were not mine to share. The original music was not mine either, so there is none. The start screen shows the title where the original showed the logo of LÖVE, the engine it ran on.</li>
+    <li>The 2011 source is here: <a href="source-2011/main.lua">main.lua</a>, <a href="source-2011/conf.lua">conf.lua</a> and the word file, <a href="source-2011/words.txt">words.txt</a>.</li>
+  </ul>
+</section>
+
+<footer>
+  <p>The Decay of Meaning, Prayas Abhinav, 2011. © 2011 Prayas Abhinav. Licensed under <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0</a> (<a href="decay-of-meaning-licence-cc-by-4.0.txt">full text of the licence</a>).</p>
+  <p><a href="https://github.com/prayasabhinav/games">More games</a></p>
+</footer>
+</div>
+</body>
+</html>

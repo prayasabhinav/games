@@ -10,7 +10,9 @@
 
 ### [▶ Play Blackpool](https://prayasabhinav.github.io/games/blackpool/play/)
 
-On one screen or each on your own phone. No sign-in. Each game also has a page with its rules and print files: [3 Quarters](https://prayasabhinav.github.io/games/3-quarters/), [All or Nothing](https://prayasabhinav.github.io/games/all-or-nothing/), [Matbhed](https://prayasabhinav.github.io/games/matbhed/) and [Blackpool](https://prayasabhinav.github.io/games/blackpool/).
+### [▶ Play The Decay of Meaning](https://prayasabhinav.github.io/games/decay-of-meaning/play/)
+
+On one screen or each on your own phone. No sign-in. Each game also has a page with its rules and print files: [3 Quarters](https://prayasabhinav.github.io/games/3-quarters/), [All or Nothing](https://prayasabhinav.github.io/games/all-or-nothing/), [Matbhed](https://prayasabhinav.github.io/games/matbhed/), [Blackpool](https://prayasabhinav.github.io/games/blackpool/) and [The Decay of Meaning](https://prayasabhinav.github.io/games/decay-of-meaning/).
 
 Games I designed, with their rules and the files to print and play them.
 
@@ -18,6 +20,7 @@ Games I designed, with their rules and the files to print and play them.
 - **All or Nothing** (2020): a card game for 2 to 4 players about completing a 12-slice pizza. Players add and take away slices with number cards, and whoever completes the pizza scores a point for every card in the centre.
 - **Matbhed** (2023): a board game I designed with Jaskaran Singh for Conflictorium's Re-Art25 project, about Article 25 of the Constitution of India, the freedom of religion. Players cross a maze and answer cards on religion and the law, printed in English and Gujarati, and a Judge scores each answer. Its files and rules are in [`matbhed/`](matbhed/README.md).
 - **Blackpool** (2019): a board game I made with Priyamvada Gaur at Nonserious, my games brand at my company Storyflock. Two to four players race three travellers each out of a whirlpool whose rings pull them back; a traveller that lands on another player's rides on it. Its files and rules are in [`blackpool/`](blackpool/README.md).
+- **The Decay of Meaning** (2011): a game I made on a database of value-laden words, shown at *Words: a user's manual*, Exhibit 320, New Delhi. Two avatars of me chase each other round a planet, and each word one eats changes its speed. It is kept here as the 2011 game, ported to the browser, not improved. Its files and source are in [`decay-of-meaning/`](decay-of-meaning/README.md).
 
 3 Quarters and All or Nothing are among the known games in boardgameBuilder, at [boardgame.syntax.prayasabhinav.net](https://boardgame.syntax.prayasabhinav.net), where each can be downloaded as a design and opened to change.
 
@@ -62,10 +65,16 @@ The game's page: https://prayasabhinav.github.io/games/blackpool/
 
 The board and its back, the rules booklet (and its text), the five charm and five curse cards, the travellers and the coins. See [`blackpool/README.md`](blackpool/README.md).
 
+## The Decay of Meaning
+
+The game's page: https://prayasabhinav.github.io/games/decay-of-meaning/
+
+The game in the browser, the 2011 Lua source and word file, and photographs of the installation. See [`decay-of-meaning/README.md`](decay-of-meaning/README.md).
+
 ## Play in a browser
 
 Each game can also be played in a browser, free and with no sign-in, on one screen or on separate devices: [3 Quarters](https://prayasabhinav.github.io/games/3-quarters/play/), [All or Nothing](https://prayasabhinav.github.io/games/all-or-nothing/play/) and [Matbhed](https://prayasabhinav.github.io/games/matbhed/play/) and [Blackpool](https://prayasabhinav.github.io/games/blackpool/play/). For separate devices, one player hosts and the others join with a link or a five-letter code; moves pass through a small relay, games-relay.prayasabhinav.net, which keeps nothing. In 3 Quarters, All or Nothing and Blackpool a seat can be played by the computer. When a game ends, each page offers a short form to say how it went. Each page lists, under *How this version reads the rules*, where the written rules left something open and what the page does there.
 
 ## Licence
 
-3 Quarters, Matbhed and Blackpool are under Creative Commons Attribution 4.0. All or Nothing carries no licence.
+3 Quarters, Matbhed, Blackpool and The Decay of Meaning are under Creative Commons Attribution 4.0. All or Nothing carries no licence.

@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Decay of Meaning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { color-scheme: dark; --mono: "Roboto Mono", ui-monospace, Menlo, monospace; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #eee; font: 15px/1.5 var(--mono); }
+canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; touch-action: manipulation; cursor: pointer; }
+.bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: center; align-items: center;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)); font-size: .78rem; color: #e8eef5; background: linear-gradient(transparent, rgba(0,0,0,.5)); pointer-events: none; }
+.bar > * { pointer-events: auto; }
+.bar kbd { font: inherit; border: 1px solid rgba(255,255,255,.6); padding: 0 5px; }
+.bar button { font: inherit; color: #fff; background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.6); padding: 3px 10px; cursor: pointer; }
+#info { position: fixed; inset: 0; z-index: 5; overflow: auto; background: rgba(0,0,0,.88); padding: 24px 16px 40px; }
+#info .inner { max-width: 720px; margin: 0 auto; }
+#info h2 { font: 400 2rem/1.1 Anton, Impact, sans-serif; margin: 0 0 12px; }
+#info h3 { font-size: 1rem; margin: 20px 0 6px; color: #fff; }
+#info li { margin: 6px 0; }
+#info a { color: #fff; }
+#info footer { margin-top: 22px; color: #9a9a9a; font-size: .82rem; }
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="The Decay of Meaning: two runners circle a small planet ringed with words"></canvas>
+<div class="bar">
+  <span><kbd>1</kbd>, <kbd>space</kbd> or a tap: jump</span>
+  <button type="button" id="pause">Pause</button>
+  <button type="button" id="sound">Sound off</button>
+  <button type="button" id="full">Full screen</button>
+  <button type="button" id="about">About</button>
+</div>
+
+<div id="info" hidden>
+  <div class="inner">
+    <h2>The Decay of Meaning</h2>
+    <p>A game I made in 2011, based on a database of value-laden words. Its runners are two avatars of me, chasing each other round a planet. Each runner's speed changes with the value of the word it meets when it jumps. I showed it in 2011 at <i>Words: a user's manual</i>, an exhibition curated by Himali Singh Soin at Exhibit 320 in Lado Sarai, New Delhi. It ran on a screen in a wooden box and was played with one large red button.</p>
+    <h3>Playing it</h3>
+    <ul>
+      <li>You are the runner in blue trousers, on top of the planet; the computer runs in red, underneath. A new game begins by itself a few seconds after the last.</li>
+      <li>To jump, press the <b>1</b> key or the space bar, or tap the screen. These stand in for the red button. A jump that meets a word eats it, and the word changes your speed. Some words speed you up and some slow you down; the game does not say which.</li>
+      <li>When the two runners meet, one of them, usually the slower, loses a life; each has three. <b>M</b> turns the sound on and off, <b>P</b> pauses, <b>F</b> goes full screen, <b>R</b> starts again and <b>Q</b> stops the game, as it quit the program in 2011.</li>
+    </ul>
+    <h3>This is the 2011 game</h3>
+    <ul>
+      <li>The page runs the 2011 code, ported line by line from Lua to JavaScript. It reads the same word file and keeps the original rules, timings and quirks. Two quirks you will see: a runner's place is worked out as its speed times the time since the round began, so when its speed changes it jumps to a new place on the circle instead of speeding up from where it was. And words left from one game stay on the planet in the next.</li>
+      <li>The lettering is new, because the original font is not mine to share. The sounds and the marks that show how many lives are left are new for the same reason, and the original music was not mine either, so there is none. The start screen shows the title, centred with its line under it, where the original showed the logo of LÖVE, the engine the game ran on. The sky is the 2011 image, but here it fills the whole screen; in 2011 it filled an 800 by 600 picture. Pause and full screen belong to the page, not the game. The sound is off when the game starts, as it was in 2011.</li>
+      <li>The runners, the planet and the sky are the 2011 images.</li>
+    </ul>
+    <footer>The Decay of Meaning, Prayas Abhinav, 2011. © 2011 Prayas Abhinav. Licensed under <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0</a>. <a href="../">The game's page and its 2011 source</a>.</footer>
+    <p><a href="https://forms.prayasabhinav.net/f/play-decay-of-meaning" target="_blank" rel="noopener">Tell me how the game went</a>, in a short form</p>
+    <p><button type="button" id="close">Back to the game</button></p>
+  </div>
+</div>
+
+<script>
+// ---------- the engine pieces the 2011 game used, as small as it needs ----------
+// hump.timer: functions waiting for a delay; clear() drops them all
+const Timer = {
+  fns: new Map(),
+  add(delay, fn) { this.fns.set(fn, delay); },
+  update(dt) {
+    const due = [];
+    for (const [fn, d] of this.fns) { const left = d - dt; this.fns.set(fn, left); if (left <= 0) due.push(fn); }
+    for (const fn of due) { this.fns.delete(fn); fn(fn); }
+  },
+  clear() { this.fns = new Map(); },
+};
+// tween.lua: move fields of an object to target values over a time, with an easing
+const EASE = { linear: (t, b, c, d) => c * t / d + b, inQuint: (t, b, c, d) => c * Math.pow(t / d, 5) + b };
+const tween = {
+  list: [],
+  start(time, subject, target, easing) {
+    const from = {}; for (const k in target) from[k] = subject[k];
+    this.list.push({ time, t: 0, subject, target, from, easing });
+  },
+  update(dt) {
+    for (const tw of this.list) {
+      tw.t = Math.min(tw.time, tw.t + dt);
+      for (const k in tw.target) tw.subject[k] = tw.t >= tw.time ? tw.target[k] : EASE[tw.easing](tw.t, tw.from[k], tw.target[k] - tw.from[k], tw.time);
+    }
+    this.list = this.list.filter(tw => tw.t < tw.time);
+  },
+};
+// Lua's math.random(m, n): a whole number from m to n
+const random = (m, n) => m + Math.floor(Math.random() * (n - m + 1));
+// love.timer.getTime(): seconds the game has run, stopped while paused
+let clock = 0;
+const getTime = () => clock;
+
+// ---------- sound: the 2011 sound files are not the game's own, so these are made here ----------
+let ac = null, volume = 0.0;                            // love.audio.setVolume(0.0): the 2011 game started silent
+const SOUNDS = { p_coin: [520, 880, .16, 'sine'], n_coin: [440, 200, .22, 'sine'], crash: [160, 60, .35, 'sawtooth'], death: [220, 50, .9, 'square'] };
+function play(name) {
+  if (!volume || !ac) return;
+  const [f0, f1, len, type] = SOUNDS[name], t = ac.currentTime, o = ac.createOscillator(), v = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + len);
+  v.gain.setValueAtTime(.18, t); v.gain.exponentialRampToValueAtTime(.001, t + len);
+  o.connect(v).connect(ac.destination); o.start(t); o.stop(t + len + .02);
+}
+
+// ---------- the 2011 game, main.lua, ported ----------
+let T, tt, word_count, delay, vel, comp, msg, word, sign, lists, wordFileLines;
+let p1_life, p2_life, score, string_, status, over, temp, counter, ax1, ay1, ax2, ay2, n1, n2, d1, d2, label1, label2;
+let dQ1 = 0, dQ2 = 0, slow = 0, animTime = 0;
+let player1_pos, player1_neg, player2_pos, player2_neg;
+const log = [];                                           // what 2011 wrote to log.txt
+
+function load() {
+  T = 0; tt = 0; word_count = 0; delay = true;
+  vel = { v1: 0.0, v2: 0.0 };
+  msg = 'The next game will begin in 5 seconds.';
+  word = []; sign = []; lists = [];
+  assign();
+}
+
+function init() {
+  p1_life = 3; p2_life = 3;
+  Timer.add(2, () => { comp = true; });
+  tt = 0;
+  T = getTime();
+  player1_pos = 'Player1:POSITIVE - '; player1_neg = 'Player1:NEGATIVE - ';
+  player2_pos = 'Player2:POSITIVE - '; player2_neg = 'Player2:NEGATIVE - ';
+  vel = { v1: 0.3, v2: 0.3 };
+  score = 0; string_ = ' '; status = ' '; over = false; temp = 0; counter = 0;
+  ax1 = -28; ay1 = -185; ax2 = 32; ay2 = 193;
+  n1 = 0; n2 = 0; d1 = 0; d2 = 0;
+  word_count = 0;
+  label1 = { x: 0, y: 0, d: 0, text: '' };
+  label2 = { x: 0, y: 0, d: 0, text: '' };
+}
+
+function reset() {
+  tt = getTime();
+  vel = { v1: 0.3, v2: 0.3 };
+}
+
+function collide() {
+  const x1 = 100 * Math.sin(dQ1), y1 = -100 * Math.cos(dQ1);
+  const x2 = 100 * Math.sin(-dQ2), y2 = 100 * Math.cos(dQ2);
+  if (Math.abs(x1 - x2) < 10 && Math.abs(y1 - y2) < 10 && over === false) {
+    play('crash');
+    life();
+    if (p1_life === 0 || p2_life === 0) {
+      play('death');
+      score = Math.ceil(Math.max(vel.v1, vel.v2) * 100 + getTime() - T);
+      status = '';
+      over = true;
+      log.push(p1_life > 0 ? player1_pos + '\t' + player1_neg : player2_pos + '\n' + player2_neg);
+      Timer.clear();
+      Timer.add(5, () => { delay = true; assign(); reset(); });      // back to the start screen after 5 seconds
+    }
+  }
+}
+
+function life() {
+  if (vel.v1 > vel.v2 && n2 === vel.v2) { p2_life--; if (p2_life > 0) { reset(); assign(); } }
+  else if (vel.v1 < vel.v2 && n1 === vel.v1) { p1_life--; if (p1_life > 0) { reset(); assign(); } }
+  else if (n1 > vel.v1) { p2_life--; if (p2_life > 0) { reset(); assign(); } }
+  else { p1_life--; if (p1_life > 0) { reset(); assign(); } }
+}
+
+// every call reads the whole word file again, and adds thirty more words to the planet
+function assign() {
+  word_count = 0;
+  wordFileLines.forEach((line, k) => {
+    let str = '';
+    for (const c of line) {
+      if (c !== '+' && c !== '-') str += c;
+      else if (c === '+') sign[k + 1] = 0;
+      else if (c === '-') sign[k + 1] = 1;
+    }
+    word[k + 1] = str;
+  });
+  for (let l = 1; l <= 30; l++) {
+    const list = { d: word[l], f: random(20, 30), s: sign[l] };     // s: 1 takes away, 0 adds
+    [list.x, list.y, list.th] = position(l);
+    lists.push(list);
+  }
+}
+
+function position(index) {
+  let loc_x, loc_y, loc_th;
+  if (random(0, 1) > 0) {
+    loc_x = random(0, 6) * 78.33 - 230;
+    loc_y = Math.abs(Math.sqrt(55225 - loc_x ** 2));
+    if (random(1, 10) % 2 === 0) loc_y = -loc_y;
+    loc_th = 2 * Math.atan2(loc_y + 235, loc_x);
+  } else {
+    loc_x = random(0, 7) * 78.57 - 275;
+    loc_y = Math.abs(Math.sqrt(75625 - loc_x ** 2));
+    if (random(1, 10) % 2 === 0) loc_y = -loc_y;
+    loc_th = 2 * Math.atan2(loc_y + 275, loc_x);
+  }
+  for (const z of lists) if (z.x === loc_x && z.y === loc_y) { position(index); break; }   // as in 2011: the new place is not used
+  return [loc_x, loc_y, loc_th];
+}
+
+function update(dt) {
+  animTime += dt;
+  Timer.update(dt);
+  tween.update(dt);
+  const time_elapsed = getTime() - tt;
+  dQ1 = vel.v1 * time_elapsed;
+  dQ2 = vel.v2 * time_elapsed;
+  slow = (0.1 * time_elapsed) / 10;
+  collide();
+  if (comp === true && delay === false) AI();
+  if (word_count > 20) assign();
+}
+
+const lua_mod = (a, b) => a - Math.floor(a / b) * b;     // Lua's % takes the sign of the divisor
+
+function jump(k) {
+  if (k === 1) {
+    d1 = lua_mod(dQ1, 2 * Math.PI);
+    for (let i = 1; i <= lists.length; i++) {
+      const v = lists[i - 1];
+      if (Math.abs(d1 - v.th) < 0.2 && v.x !== 0 && v.y !== 0 && over === false) {
+        word_count++;
+        if (sign[i] === 0) { n1 = Math.min(Math.max(vel.v1 + ((random(5, 20) / 100) * vel.v1), 0.1), 0.5); player1_pos += word[i] + '\n'; play('p_coin'); }
+        else if (sign[i] === 1) { n1 = Math.min(Math.max(vel.v1 - ((random(5, 20) / 100) * vel.v1), 0.1), 0.5); player1_neg += word[i] + '\n'; play('n_coin'); }
+        label1 = { x: v.x, y: v.y, d: v.th, text: word[i] };
+        word[i] = '';
+        v.s = 2; v.x = 0; v.y = 0; v.th = 0;
+        tween.start(2, label1, { y: 0, x: 0 }, 'inQuint');
+        tween.start(1, vel, { v1: n1 }, 'linear');
+        const l = label1; Timer.add(2, () => { l.text = ''; });
+        break;
+      }
+    }
+  } else {
+    d2 = lua_mod(dQ2 + Math.PI, 2 * Math.PI);
+    for (let i = 1; i <= lists.length; i++) {
+      const v = lists[i - 1];
+      if (Math.abs(d2 - v.th) < 0.3 && v.x !== 0 && v.y !== 0 && over === false) {
+        word_count++;
+        label2 = { x: v.x, y: v.y, d: v.th, text: word[i] };
+        if (sign[i] === 0) { n2 = Math.min(Math.max(vel.v2 + ((random(5, 20) / 100) * vel.v2), 0.1), 0.5); player2_pos += word[i] + '\n'; play('p_coin'); }
+        else if (sign[i] === 1) { n2 = Math.min(Math.max(vel.v2 - ((random(5, 20) / 100) * vel.v2), 0.1), 0.5); player2_neg += word[i] + '\n'; play('n_coin'); }
+        word[i] = '';
+        v.s = 2; v.x = 0; v.y = 0; v.th = 0;
+        tween.start(2, label2, { y: 0, x: 0 }, 'inQuint');
+        const l = label2; Timer.add(5, () => { l.text = ''; });
+        tween.start(2, vel, { v2: n2 }, 'linear');
+        break;
+      }
+    }
+  }
+}
+
+function AI() {
+  comp = false;
+  Timer.clear();
+  d2 = lua_mod(dQ2 + Math.PI, 2 * Math.PI);
+  for (const v of lists) {
+    if (Math.abs(d2 - v.th) < 0.3 && v.x !== 0 && v.y !== 0 && vel.v2 < vel.v1 + 0.05) {
+      ax2 = 30; ay2 = 260;
+      Timer.add(0.3, () => { ax2 = 30; ay2 = 185; });
+      jump(2);
+      break;
+    }
+  }
+  Timer.add(4, () => { comp = true; });
+}
+
+function keypressed(key) {
+  if (key === '1' && delay === false) {
+    ax1 = -30; ay1 = -260;
+    Timer.add(0.3, () => { ax1 = -30; ay1 = -185; });
+    jump(1);
+  }
+  if (key === 'm' && delay === false) { volume = Math.abs(volume - 1.0); showSound(); }
+  if (key === 'r') { delay = true; assign(); }
+}
+
+// ---------- drawing: love.draw, on a canvas that fills the window ----------
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+const img = src => Object.assign(new Image(), { src });
+const bkground = img('sky.jpg'), image = img('planet.png'), img1 = img('runner-blue.png'), img2 = img('runner-red.png');
+const FONT = 'Anton, Impact, "Arial Narrow", sans-serif';
+let dpr = 1, VW = 800, VH = 600, K = 1;
+function fit() {
+  dpr = Math.min(2, window.devicePixelRatio || 1);
+  VW = innerWidth; VH = innerHeight;
+  cv.width = Math.round(VW * dpr); cv.height = Math.round(VH * dpr);
+  K = Math.min(VW / 800, (VH - 36) / 600);
+}
+fit(); addEventListener('resize', fit);
+
+function print(text, x, y, r = 0) {                     // love.graphics.print: text from its top left, turned about that point
+  g.save(); g.translate(x, y); g.rotate(r); g.textBaseline = 'top'; g.fillText(String(text), 0, 0); g.restore();
+}
+function anim(sheet, x, y, r = 0) {                       // AnAl: four frames of 63 by 96, a fifth of a second each
+  const f = Math.floor(animTime / 0.2) % 4;
+  g.save(); g.translate(x, y); g.rotate(r); g.drawImage(sheet, f * 63, 0, 63, 96, 0, 0, 63, 96); g.restore();
+}
+function lifeMark(x, y, col) { g.fillStyle = col; g.beginPath(); g.arc(x + 12.5, y + 12.5, 10, 0, 2 * Math.PI); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke(); }
+
+function draw() {
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.fillStyle = '#000'; g.fillRect(0, 0, VW, VH);
+  // the 2011 sky, drawn once to fill the whole window
+  if (bkground.complete) { const c = Math.max(VW / 800, VH / 600); g.drawImage(bkground, (VW - 800 * c) / 2, (VH - 600 * c) / 2, 800 * c, 600 * c); }
+  g.setTransform(dpr * K, 0, 0, dpr * K, dpr * VW / 2, dpr * (VH - 36) / 2);   // TLfres: the 800 by 600 world, centred
+  if (delay === true) return start();
+  g.font = `20px ${FONT}`;
+  g.fillStyle = '#000'; print(string_, -350, -300);
+  if (over === true) {
+    if (counter === 0) counter = 1;
+    else {
+      g.fillStyle = '#000';
+      print('Game over!', -60, -60);
+      print(p2_life === 0 ? 'You win.' : 'Computer wins.', -75, 0);
+    }
+    return;
+  }
+  g.fillStyle = 'rgb(100,100,100)'; print(status, -400, 275);
+  g.fillStyle = 'rgb(13,34,114)'; g.fillRect(400 - vel.v1 * 200, -297, vel.v1 * 200, 15);
+  for (let w = 1; w <= p1_life; w++) lifeMark(-310 - 25 * w, -300, 'rgb(13,34,114)');
+  g.fillStyle = 'rgb(193,47,14)'; g.fillRect(400 - vel.v2 * 200, -272, vel.v2 * 200, 15);
+  for (let w = 1; w <= p2_life; w++) lifeMark(-310 - 25 * w, -275, 'rgb(193,47,14)');
+  g.rotate(slow);
+  g.fillStyle = '#fff';
+  lists.forEach((v, k) => {
+    if (Math.abs(v.th - 4.712388) < 0.01) return;
+    g.font = `${v.f}px ${FONT}`;
+    print(word[k + 1] === undefined ? 'nil' : word[k + 1], v.x, v.y, v.th);
+  });
+  g.font = `20px ${FONT}`;
+  g.fillStyle = 'rgb(255,0,0)';
+  print(label1.text, label1.x, label1.y, label1.d);
+  print(label2.text, label2.x, label2.y, label2.d);
+  if (image.complete) g.drawImage(image, -100, -100);
+  g.rotate(dQ1);
+  anim(img1, ax1, ay1);
+  g.rotate(dQ2 - dQ1);
+  anim(img2, ax2, ay2, 3.14);
+}
+
+function start() {
+  // in place of the LÖVE logo, the game's title, in the same box
+  g.fillStyle = '#fff';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = `56px ${FONT}`; g.fillText('The Decay of Meaning', 0, -60);
+  g.font = `24px ${FONT}`; g.fillText(msg, 0, 10);
+  g.textAlign = 'start';
+  if (delay === true) Timer.add(5, () => { delay = false; init(); reset(); });   // as in 2011: a timer on every frame the start screen shows
+}
+
+// ---------- the page: keys, the red button, pause, full screen ----------
+let paused = false, quit = false;                       // Q quit the 2011 program; here it stops the game
+const pauseBtn = document.getElementById('pause'), soundBtn = document.getElementById('sound'), info = document.getElementById('info');
+function togglePause() { if (delay !== false || over) return; paused = !paused; pauseBtn.textContent = paused ? 'Go on' : 'Pause'; }
+function showSound() { soundBtn.textContent = volume ? 'Sound on' : 'Sound off'; if (volume && !ac) ac = new AudioContext(); }
+function toggleFull() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => {}); }
+pauseBtn.addEventListener('click', togglePause);
+soundBtn.addEventListener('click', () => { volume = Math.abs(volume - 1.0); showSound(); });
+document.getElementById('full').addEventListener('click', toggleFull);
+addEventListener('fullscreenchange', () => { document.getElementById('full').textContent = document.fullscreenElement ? 'Leave full screen' : 'Full screen'; });
+document.getElementById('about').addEventListener('click', () => { info.hidden = false; });
+document.getElementById('close').addEventListener('click', () => { info.hidden = true; });
+addEventListener('keydown', e => {
+  if (e.key === 'Escape') { info.hidden = true; return; }
+  if (!info.hidden) return;
+  if (quit) { if (e.key === '1' || e.key === ' ') location.reload(); return; }
+  if (e.key === 'q' || e.key === 'Q') { quit = true; return; }
+  if (e.key === 'p' || e.key === 'P') return togglePause();
+  if (e.key === 'f' || e.key === 'F') return toggleFull();
+  if (paused) return;
+  if (e.key === '1' || e.key === ' ') { e.preventDefault(); keypressed('1'); }
+  else if (e.key === 'm' || e.key === 'M') keypressed('m');
+  else if (e.key === 'r' || e.key === 'R') keypressed('r');
+});
+cv.addEventListener('pointerdown', e => { e.preventDefault(); if (quit) return location.reload(); paused ? togglePause() : keypressed('1'); });
+
+let last = performance.now(), ready = false;
+function loop(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (ready && quit) {
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#000'; g.fillRect(0, 0, VW, VH);
+    g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = `40px ${FONT}`; g.fillText('The Decay of Meaning has stopped.', VW / 2, VH / 2 - 30);
+    g.font = '16px "Roboto Mono", monospace'; g.fillText('Press 1 or tap to start it again.', VW / 2, VH / 2 + 24);
+    g.textAlign = 'start';
+  } else if (ready) {
+    if (!paused) { clock += dt; update(dt); }
+    draw();
+    if (paused) {
+      g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(-2000, -2000, 4000, 4000);
+      g.fillStyle = '#fff'; g.font = `64px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('Paused', 0, -20);
+      g.font = '16px "Roboto Mono", monospace'; g.fillText('Press P to go on.', 0, 50); g.textAlign = 'start';
+    }
+  }
+  requestAnimationFrame(loop);
+}
+// contents/words.txt, read as 2011 read it
+fetch('words.txt').then(r => r.text()).then(t => {
+  wordFileLines = t.split('\n');
+  if (wordFileLines[wordFileLines.length - 1] === '') wordFileLines.pop();
+  load(); ready = true;
+});
+requestAnimationFrame(loop);
+window.__decay = { get state() { return { delay, over, p1_life, p2_life, v: vel, dQ1, dQ2, lists: lists.length, word_count, log }; }, keypressed };   // for testing
+</script>
+</body>
+</html>
