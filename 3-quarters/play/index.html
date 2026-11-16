@@ -24,6 +24,7 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opa
 .wrap{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding-inline:16px;padding-block:10px 28px}
 header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 header svg{width:46px;height:46px;flex:none}
+header .logo{display:flex;flex:none}
 h1{font:700 52px/1 var(--head);margin:0}
 header p{margin:0;color:var(--graphite-soft);flex:1 1 280px}
 h2,h3{font:700 30px/1.1 var(--head);margin:0 0 8px}
@@ -183,6 +184,7 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
 
 <div class="wrap">
 <header>
+  <a class="logo" href="./" aria-label="3 Quarters">
   <svg viewBox="0 0 100 100" aria-hidden="true">
     <g stroke="#4a4a4f" stroke-width="3" stroke-linejoin="round" filter="url(#pencil)">
       <path d="M46 46V8A38 38 0 0 0 8 46Z" fill="url(#p-dots)"/>
@@ -191,6 +193,7 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
       <path d="M54 54H92A38 38 0 0 1 54 92Z" fill="none" stroke-dasharray="5 6" opacity=".5"/>
     </g>
   </svg>
+  </a>
   <h1>3 Quarters</h1>
   <p>Three pieces of one pattern, all facing the same corner, make three quarters of a circle. First to 25 points wins.</p>
 </header>
