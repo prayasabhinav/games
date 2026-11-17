@@ -119,6 +119,8 @@ a.tab{display:inline-block;text-decoration:none}
 .hp.pick:hover{background:var(--gold-pale)}
 .hp[aria-pressed="true"]{background:var(--lapis-pale);border:1.6px solid var(--lapis)}
 .hp.none{opacity:.3}
+#endVote{margin:8px 0 0;color:var(--ink-soft)}
+#endVote .tab{margin:4px 6px 0 0}
 #say{margin:8px 0 0;min-height:2.8em}
 #end{margin-top:10px;padding-top:10px;border-top:1px solid rgba(180,138,60,.6)}
 #endText{font:400 27px/1.15 var(--head);margin:0 0 10px}
@@ -297,6 +299,7 @@ footer{margin-top:26px;padding-top:10px;border-top:1px solid rgba(180,138,60,.6)
     </div>
     <div class="hand" id="hand"></div>
     <p id="say"></p>
+    <p id="endVote"></p>
     <div id="end" hidden>
       <p id="endText"></p>
       <button class="tab big" id="again">Play again</button>
@@ -349,7 +352,7 @@ footer{margin-top:26px;padding-top:10px;border-top:1px solid rgba(180,138,60,.6)
     <li>The win is checked after every move: the first to have completed a circle in all four patterns wins at once. Points still count: they decide the winner when a quiet round ends the game.</li>
     <li>The timer is on, as the rules ask; the table can turn it off before starting. With it on, the 20 seconds start when a person's turn starts, die roll included. If they run out, the turn passes with no action. Computer players are not timed.</li>
     <li>Every turn has a legal action, so there is no rule for passing: when the board holds a piece it can be turned, and when it is empty every piece is back in hand and can be added.</li>
-    <li>If nobody can make a remove, now or after more pieces are added, and no corner can get three pieces of one pattern round it from the pieces there, its empty squares and the pieces in hand, no circle can ever be made again. The game then ends and the highest score wins (shared on a tie).</li>
+    <li>The players can end a game together before anyone wins: each person playing presses End game for their own colour, and the game ends when the last of them does. Nobody wins, and the scores stand. Computer players are not asked.</li>
     <li>Hands are open, as on a table: everyone can see everyone's pieces.</li>
     <li>The coin toss picks the first player at random; play then goes round in seat order: Blue, Yellow, Graphite, White.</li>
   </ol>
@@ -539,6 +542,7 @@ const net = {role:null, ws:null, id:0, hostId:0, name:'', guests:[]};
 const cur = () => G.players[G.turn];
 const mine = i => owner[i] === (net.role === 'guest' ? net.id : 0);
 const canAct = () => !cur().cpu && mine(G.turn);
+const people = () => G.players.flatMap((p, i) => p.cpu ? [] : [i]);
 const kind = i => G.players[i].cpu ? 'computer' : net.role ? names[owner[i]] : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
 // waits are stretched a little at random, so the computer does not move like a metronome
@@ -694,6 +698,8 @@ function drawTurn(){
       aria-pressed="${sel.action === 'add' && sel.pat === pat}" aria-label="${PAT[pat].name}, ${PAT[pat].pts} points, ${k} in hand" ${picking && k ? '' : 'tabindex="-1"'}>
       <svg viewBox="0 0 100 100">${pieceSvg(0, 0, 100, pat, G.turn, PRINTED_FACE, false)}</svg><i>${PAT[pat].name}</i>${PAT[pat].pts} pt${pat ? 's' : ''} · ×${k}</button>`).join('');
   $('#say').textContent = instruction();
+  $('#endVote').hidden = phase === 'over' || !people().length;
+  $('#endVote').innerHTML = `To end the game here, every person playing presses their colour; press again to take it back. ${people().map(i => `<button class="tab sm" data-end="${i}" aria-pressed="${G.ends.includes(i)}"${mine(i) ? '' : ' disabled'}>${G.players[i].name}</button>`).join('')}`;
   $('#end').hidden = phase !== 'over';
   if (phase === 'over') $('#endText').textContent = lines[0];
 }
@@ -717,7 +723,8 @@ function render(){
 // The texts are cut from 2027/stories.md and the four episodes in 2027/README.md; nothing is added to them but
 // what the game itself did. Every story is a proposal. A part is "src" (what a source says, with its reference),
 // "spec" (speculation: it did not happen), or "tie"/"geo" (a proposal about how the story meets the pieces).
-// Story 4 is left out: it needs three quiet rounds in a row.
+// Story 4 is left out: it needs three quiet rounds in a row. Story 0, the frame, is a proposal written for his frame
+// (an alternative history of the Islamic world's geometry and craft), recorded in 2027/stories.md.
 const TAG = {src:'Source', spec:'Speculation', tie:'Tie · a proposal', geo:'Geometry · a proposal'};
 const EPISODE = [          // story 1, one for each pattern, by PAT order: obtuse, median, two-point, acute
   {title:`The octagon cut from a square`, parts:[
@@ -733,6 +740,12 @@ const EPISODE = [          // story 1, one for each pattern, by PAT order: obtus
     ['src', `Bonner (2015) records that the most common acute design of his 4-fold system B, made from octagons and pentagons, appears in a marble jali screen at the tomb of Salim Chishti at Fatehpur Sikri. He notes that the screen includes the underlying tessellation as part of the finished screen, and takes it as evidence that the polygonal technique was really used, since the method normally throws its tessellation away.`],
     ['tie', `The same acute family, drawn by the same method as these pieces. The tessellation differs: octagons and pentagons there, octagons and squares here.`]]},
 ];
+// story 0, the frame: told from the first turn, one part more with each turn, until it is all told
+const FRAME = {title:`The world this game is played in`, parts:[
+  ['spec', `This is an alternative history: what if the Islamic world's tradition of geometry and craft had become the whole world's? Not its rulers or its battles, but its geometers and artisans, and the way they worked out together how a figure is cut and laid.`],
+  ['src', `They really did meet. Abu'l-Wafā' al-Būzjānī (940–998) writes of meetings in Baghdad where geometers and artisans were asked to cut and compose squares, and a Persian collection from about 1300 seems to have been compiled from a scribe's notes at such meetings (Özdural 2000).`],
+  ['spec', `In this world the meetings spread to every city and never stopped. What was argued out at them decided how floors, walls and screens were made everywhere, and a workshop's figures stood only once a meeting had accepted them.`],
+  ['tie', `The players sit at one such meeting. Each piece is a quarter cut from a square round an octagon; three of a pattern facing one corner make a figure the meeting accepts. The rest of the story is told as the meeting goes: each pattern's history with its first circle, the register once a circle or a remove is entered, and the others as the table earns them.`]]};
 const TALE = {
   2: {title:`The four missing quarters make one square`, parts:[
     ['geo', `The empty fourth place of each circle stands for a corner cut off a square. In the octagon-and-square drawing, the four corner triangles cut from a square repeat unit to leave its octagon make exactly one small square. Once all four patterns have a circle, the four missing quarters, laid together off the board, make that square.`],
@@ -757,7 +770,7 @@ const TALE = {
     ['spec', `In this world patterns travel between workshops only as their construction, never as finished pictures, so a workshop receives the dotted polygons and must find the star itself. Each pattern's pieces show only the red dotted construction until the first circle in that pattern is completed; from then on its pieces are turned to the side with the star lines.`]]},
 };
 // what has been told: tales in the order they came; the register's lines; fired, for checking which stories ran
-let tales = [], register = [], fired = [], moveNo = 0, storyVer = 0, storyDrawn = -1, leavesSeen = 0;
+let tales = [], register = [], fired = [], framePart = 0, moveNo = 0, storyVer = 0, storyDrawn = -1, leavesSeen = 0;
 const told = id => fired.some(f => f.id === id);
 function tell(id, why, pat, add){
   tales.push({id, why, pat, add});
@@ -769,7 +782,9 @@ function minute(text, pat, struck){
   register.push({text, pat, struck});
   storyVer++;
 }
+function frameOn(){ if (framePart < FRAME.parts.length){ framePart++; storyVer++; } }
 function storyFor(res){
+  frameOn();
   const p = G.players[res.by], c = res.circle;
   if (c){
     minute(`${p.name}: a circle of ${PAT[c.pat].name} pieces${c.doubled ? ', doubled on a yellow square' : ''}, ${c.points} points.`, c.pat, false);
@@ -810,7 +825,7 @@ function cornersFig(){
   </svg>`;
 }
 function leaf(t, n){
-  const s = t.id === 1 ? EPISODE[t.pat] : TALE[t.id];
+  const s = t.id === 1 ? EPISODE[t.pat] : t.id === 0 ? {...FRAME, parts: FRAME.parts.slice(0, framePart)} : TALE[t.id];
   const mark = t.id === 1 ? threeQuarters(t.pat, true) : STAR;
   const reg = t.id === 5 ? `<ol class="reg" reversed>${register.map(e => `<li>${e.struck ? `<s>${e.text}</s>` : e.text}</li>`).reverse().join('')}</ol>` : '';
   return `<article class="leaf${n > leavesSeen ? ' new' : ''}"><p class="num">Leaf ${ROMAN(n)}</p>
@@ -822,8 +837,9 @@ function leaf(t, n){
 function drawStory(){
   if (storyDrawn === storyVer) return;
   storyDrawn = storyVer;
-  // newest first, except the register, which stays last once it is open
-  const order = tales.map((t, i) => [t, i + 1]).reverse().sort((a, b) => (a[0].id === 5) - (b[0].id === 5));
+  // the frame first until it is all told, then newest first, with the register and then the frame last
+  const rank = t => t.id === 0 ? (framePart < FRAME.parts.length ? -1 : 2) : t.id === 5 ? 1 : 0;
+  const order = tales.map((t, i) => [t, i + 1]).reverse().sort((a, b) => rank(a[0]) - rank(b[0]));
   $('#story').innerHTML = (tales.length
     ? `<p class="intro">Told as the game is played. Every story is a proposal: <span class="tag" style="color:var(--lapis)">Source</span>is what a source says; <span class="tag" style="color:var(--rubric)">Speculation</span>did not happen.</p>`
     : `<p class="intro">Nothing is told yet. Stories arrive with circles, removes and an empty board. Until a pattern makes its first circle, its pieces show only the dotted construction beneath it.</p>`)
@@ -838,14 +854,17 @@ function drawKey(){
 function start(){
   stopTimer();
   G = createGame(cfg.cpu.slice(0, cfg.n), cfg.timer);
+  G.ends = [];                     // the people who have pressed End game
   owner = cfg.who.slice(0, cfg.n);
   lines = []; fx = null;
-  tales = []; register = []; fired = []; moveNo = 0; leavesSeen = 0; revealed = [false, false, false, false]; storyVer++;
+  tales = []; register = []; fired = []; moveNo = 0; leavesSeen = 0; revealed = [false, false, false, false];
+  framePart = 1; tell(0, `Told as the game begins, one part more with each turn.`);
   note(`Coin toss: ${cur().name} starts.`);
   $('#setup').hidden = true; $('#game').hidden = false;
   startTurn();
 }
 function startTurn(){
+  if (G.over) return;
   phase = 'roll'; sel = {};
   if (!cur().cpu && G.timer) startTimer();
   render();
@@ -866,6 +885,7 @@ function roll(){
   }
 }
 function cpuMove(){
+  if (phase !== 'act') return;
   const m = aiChoose(G);
   sel = {action:m.type, pat:m.pat, sq:m.sq};
   render();
@@ -885,6 +905,17 @@ function play(m){
   if (G.over) return finish();
   later(() => { endTurn(G); startTurn(); }, res.gone.length ? 3600 : 1700);
 }
+// a person presses End game for their own colour, or again to take it back; when every person has pressed,
+// the game ends with no winner
+function voteEnd(i){
+  if (phase === 'over' || G.players[i].cpu) return;
+  G.ends = G.ends.includes(i) ? G.ends.filter(x => x !== i) : [...G.ends, i];
+  if (!people().every(k => G.ends.includes(k))) return render();
+  stopTimer();
+  G.over = {winners: [], why: 'agreed'};
+  phase = 'over';
+  finish();
+}
 function describe(res){
   const p = G.players[res.by], m = res.move;
   const whose = o => o === res.by ? 'their own' : `${G.players[o].name}'s`;
@@ -900,6 +931,7 @@ function finish(){
   const onPts = `${names.join(' and ')} ${names.length > 1 ? 'share the win' : 'wins'} on points.`;
   const text = {
     four: `${names[0]} has a circle in all four patterns and wins.`,
+    agreed: `Every person playing pressed End game, so the game ends here. Nobody wins; the scores stand.`,
     quiet: () => `A whole round passed with only pieces turned and no circle. ${G.players[G.over.closer].name} ended the game by turning a piece when they could have added or removed one, so they cannot win. ${onPts}`,
   }[G.over.why];
   note(typeof text === 'function' ? text() : text);
@@ -925,6 +957,7 @@ function timeUp(){
   phase = 'wait'; sel = {};
   timerEnds = 0; runRing(0);
   note(`Time ran out: ${cur().name}'s turn passes.`);
+  frameOn();
   if (G.board.some(Boolean)){              // a turn lost to the timer counts as a turn, except on an empty board
     G.quiet.push({seat:G.turn, chose: couldPlace(G, cur())});
     if (quietOver(G)){ phase = 'over'; return finish(); }
@@ -972,7 +1005,7 @@ function connect(code, hear){
 }
 
 // what a guest may see: in 3 Quarters hands are open, so every guest sees the whole table
-const viewFor = () => ({G, phase, sel, lines, fx, owner, names, clock: timerEnds && timerEnds - Date.now(), story: {tales, register, fired, revealed}});
+const viewFor = () => ({G, phase, sel, lines, fx, owner, names, clock: timerEnds && timerEnds - Date.now(), story: {tales, register, fired, revealed, framePart}});
 function share(){
   if (net.role === 'host') for (const g of net.guests) send({t:'state', to:g.id, view:viewFor()});
 }
@@ -1004,6 +1037,7 @@ function hostHears(m){
   if (m.t === 'left' && m.from === undefined) guestLeft(m.id);   // only the relay's own notice, which has no sender
 }
 function guestAct(m){             // a guest's click, applied as a click here would be
+  if (G && m.act === 'end') return owner[m.arg] === m.from && voteEnd(m.arg);
   if (!G || cur().cpu || owner[G.turn] !== m.from) return;
   if (m.act === 'roll') roll();
   if (m.act === 'play' && m.arg){
@@ -1059,7 +1093,7 @@ function guestHears(m){
 function show(v){                 // draw the host's table here
   const keepPick = phase === 'act' && v.phase === 'act', rolled = phase === 'roll' && v.phase === 'act';
   ({G, phase, lines, fx, owner, names} = v);
-  ({tales, register, fired, revealed} = v.story); storyVer++;
+  ({tales, register, fired, revealed, framePart} = v.story); storyVer++;
   if (!(keepPick && canAct())) sel = v.sel;
   runRing(v.clock);
   $('#join').hidden = true; $('#game').hidden = false;
@@ -1075,6 +1109,7 @@ function gone(text){
 function act(name, arg){          // a click for this device's seat; a guest's goes to the host
   if (net.role === 'guest') send({t:'act', act:name, arg, to:net.hostId});
   else if (name === 'roll') roll();
+  else if (name === 'end') voteEnd(arg);
   else play(arg);
 }
 
@@ -1099,6 +1134,10 @@ function chooseSquare(e){
 }
 $('#board').addEventListener('click', chooseSquare);
 $('#board').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); chooseSquare(e); } });
+$('#endVote').addEventListener('click', e => {
+  const b = e.target.closest('[data-end]');
+  if (b && !b.disabled) act('end', +b.dataset.end);
+});
 $('#again').addEventListener('click', start);
 $('#tell').addEventListener('click', e => {      // the form opens over the page; the frame loads on first open
   e.preventDefault();

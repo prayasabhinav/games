@@ -104,6 +104,8 @@ a.tab{display:inline-block;text-decoration:none}
 .hp[aria-pressed="true"]{background:var(--blue-2);border:1.6px solid var(--graphite)}
 .hp.none{opacity:.3}
 #say{margin:8px 0 0;min-height:2.8em}
+#endVote{margin:8px 0 0;color:var(--graphite-soft)}
+#endVote .tab{margin:4px 6px 0 0}
 #end{margin-top:10px;padding-top:10px;border-top:1.4px dashed var(--graphite-soft)}
 #endText{font:700 28px/1.15 var(--head);margin:0 0 10px}
 #end .tab{margin:0 6px 6px 0}
@@ -265,6 +267,7 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
     </div>
     <div class="hand" id="hand"></div>
     <p id="say"></p>
+    <p id="endVote"></p>
     <div id="end" hidden>
       <p id="endText"></p>
       <button class="tab big" id="again">Play again</button>
@@ -315,7 +318,7 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
     <li>The win is checked after every move: the first to have completed a circle in all four patterns wins at once. Points still count: they decide the winner when a quiet round ends the game.</li>
     <li>The timer is on, as the rules ask; the table can turn it off before starting. With it on, the 20 seconds start when a person's turn starts, die roll included. If they run out, the turn passes with no action. Computer players are not timed.</li>
     <li>Every turn has a legal action, so there is no rule for passing: when the board holds a piece it can be turned, and when it is empty every piece is back in hand and can be added.</li>
-    <li>If nobody can make a remove, now or after more pieces are added, and no corner can get three pieces of one pattern round it from the pieces there, its empty squares and the pieces in hand, no circle can ever be made again. The game then ends and the highest score wins (shared on a tie).</li>
+    <li>The players can end a game together before anyone wins: each person playing presses End game for their own colour, and the game ends when the last of them does. Nobody wins, and the scores stand. Computer players are not asked.</li>
     <li>Hands are open, as on a table: everyone can see everyone's pieces.</li>
     <li>The coin toss picks the first player at random; play then goes round in seat order: Blue, Yellow, Graphite, White.</li>
   </ol>
@@ -504,6 +507,7 @@ const net = {role:null, ws:null, id:0, hostId:0, name:'', guests:[]};
 const cur = () => G.players[G.turn];
 const mine = i => owner[i] === (net.role === 'guest' ? net.id : 0);
 const canAct = () => !cur().cpu && mine(G.turn);
+const people = () => G.players.flatMap((p, i) => p.cpu ? [] : [i]);
 const kind = i => G.players[i].cpu ? 'computer' : net.role ? names[owner[i]] : '';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
 // waits are stretched a little at random, so the computer does not move like a metronome
@@ -624,6 +628,8 @@ function drawTurn(){
       aria-pressed="${sel.action === 'add' && sel.pat === pat}" aria-label="${PAT[pat].name}, ${PAT[pat].pts} points, ${k} in hand" ${picking && k ? '' : 'tabindex="-1"'}>
       <svg viewBox="0 0 100 100">${pieceSvg(0, 0, 100, pat, G.turn, PRINTED_FACE, false)}</svg>${PAT[pat].pts} pt${pat ? 's' : ''} · ×${k}</button>`).join('');
   $('#say').textContent = instruction();
+  $('#endVote').hidden = phase === 'over' || !people().length;
+  $('#endVote').innerHTML = `To end the game here, every person playing presses their colour; press again to take it back. ${people().map(i => `<button class="tab sm" data-end="${i}" aria-pressed="${G.ends.includes(i)}"${mine(i) ? '' : ' disabled'}>${G.players[i].name}</button>`).join('')}`;
   $('#end').hidden = phase !== 'over';
   if (phase === 'over') $('#endText').textContent = lines[0];
 }
@@ -647,6 +653,7 @@ function render(){
 function start(){
   stopTimer();
   G = createGame(cfg.cpu.slice(0, cfg.n), cfg.timer);
+  G.ends = [];                     // the people who have pressed End game
   owner = cfg.who.slice(0, cfg.n);
   lines = []; fx = null;
   note(`Coin toss: ${cur().name} starts.`);
@@ -654,6 +661,7 @@ function start(){
   startTurn();
 }
 function startTurn(){
+  if (G.over) return;
   phase = 'roll'; sel = {};
   if (!cur().cpu && G.timer) startTimer();
   render();
@@ -674,6 +682,7 @@ function roll(){
   }
 }
 function cpuMove(){
+  if (phase !== 'act') return;
   const m = aiChoose(G);
   sel = {action:m.type, pat:m.pat, sq:m.sq};
   render();
@@ -691,6 +700,17 @@ function play(m){
   if (G.over) return finish();
   later(() => { endTurn(G); startTurn(); }, res.gone.length ? 3600 : 1700);
 }
+// a person presses End game for their own colour, or again to take it back; when every person has pressed,
+// the game ends with no winner
+function voteEnd(i){
+  if (phase === 'over' || G.players[i].cpu) return;
+  G.ends = G.ends.includes(i) ? G.ends.filter(x => x !== i) : [...G.ends, i];
+  if (!people().every(k => G.ends.includes(k))) return render();
+  stopTimer();
+  G.over = {winners: [], why: 'agreed'};
+  phase = 'over';
+  finish();
+}
 function describe(res){
   const p = G.players[res.by], m = res.move;
   const whose = o => o === res.by ? 'their own' : `${G.players[o].name}'s`;
@@ -706,6 +726,7 @@ function finish(){
   const onPts = `${names.join(' and ')} ${names.length > 1 ? 'share the win' : 'wins'} on points.`;
   const text = {
     four: `${names[0]} has a circle in all four patterns and wins.`,
+    agreed: `Every person playing pressed End game, so the game ends here. Nobody wins; the scores stand.`,
     quiet: () => `A whole round passed with only pieces turned and no circle. ${G.players[G.over.closer].name} ended the game by turning a piece when they could have added or removed one, so they cannot win. ${onPts}`,
   }[G.over.why];
   note(typeof text === 'function' ? text() : text);
@@ -809,6 +830,7 @@ function hostHears(m){
   if (m.t === 'left' && m.from === undefined) guestLeft(m.id);   // only the relay's own notice, which has no sender
 }
 function guestAct(m){             // a guest's click, applied as a click here would be
+  if (G && m.act === 'end') return owner[m.arg] === m.from && voteEnd(m.arg);
   if (!G || cur().cpu || owner[G.turn] !== m.from) return;
   if (m.act === 'roll') roll();
   if (m.act === 'play' && m.arg){
@@ -879,6 +901,7 @@ function gone(text){
 function act(name, arg){          // a click for this device's seat; a guest's goes to the host
   if (net.role === 'guest') send({t:'act', act:name, arg, to:net.hostId});
   else if (name === 'roll') roll();
+  else if (name === 'end') voteEnd(arg);
   else play(arg);
 }
 
@@ -903,6 +926,10 @@ function chooseSquare(e){
 }
 $('#board').addEventListener('click', chooseSquare);
 $('#board').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); chooseSquare(e); } });
+$('#endVote').addEventListener('click', e => {
+  const b = e.target.closest('[data-end]');
+  if (b && !b.disabled) act('end', +b.dataset.end);
+});
 $('#again').addEventListener('click', start);
 $('#tell').addEventListener('click', e => {      // the form opens over the page; the frame loads on first open
   e.preventDefault();
