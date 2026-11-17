@@ -227,6 +227,8 @@ details b{font-weight:500;color:var(--rubric)}
 /* 2027: the note that this is a test, and the story panel, which fills like the leaves of a book */
 .testnote{margin:12px 0 0;padding:8px 14px;font-size:16px;color:var(--ink);border-left:3px solid var(--rubric);background:rgba(246,235,200,.45)}
 .testnote b{font-weight:500;color:var(--rubric)}
+.testnote + .testnote{margin-top:6px}
+.linkish{font:inherit;color:#2d4f8e;background:none;border:0;padding:0;text-decoration:underline;cursor:pointer}
 #story{font-size:16.5px;line-height:1.45;overflow-wrap:break-word}
 .intro{color:var(--ink-soft);margin:0 0 8px;font-style:italic}
 .leaf{position:relative;background:var(--vellum-2);padding:12px 14px 10px;margin:0 0 12px;
@@ -284,6 +286,7 @@ footer{margin-top:26px;padding-top:10px;border-top:1px solid rgba(180,138,60,.6)
   <p>Three pieces of one pattern, all facing the same corner, make three quarters of a circle. The first to make a circle in each of the four patterns wins.</p>
 </header>
 <p class="testnote"><b>2027 test version, for Prayas.</b> The four patterns (Islamic geometric patterns on octagons and squares), their point values, which history goes with which pattern, and the stories told during play are proposals. The rules are the 2026 rules. <a href="../../2026/play/">Play the 2026 version</a></p>
+<p class="testnote">Every game played on this device is kept in this browser and sent nowhere: <span id="recN">0 games</span> so far. <button class="linkish" id="recDl">Download them</button></p>
 
 <section id="setup" class="card">
   <h2>Who is playing</h2>
@@ -536,13 +539,13 @@ function applyMove(g, m){
   return res;
 }
 
-// A computer seat: complete a circle if it can (most points first); else set one up
-// (turn or add a piece to face a corner where its pattern can still make a circle);
-// else a harmless move: add before turn, keep removes unless turning alone can never
-// score, and never empty the board.
-// How far the board has come toward circles: for every corner and pattern that could
-// still make one (three of its four squares hold that pattern, or are empty while someone
-// still holds it), the square of how many pieces of that pattern already face in.
+// A computer seat (2027): it weighs each move by what the move gains it now, less what the next player could
+// then gain, plus most of what it could gain itself on its next turn, each averaged over the four faces of the die. Anyone may finish a circle with anyone's pieces,
+// so a corner set up and left open is a gift to the next player; the 2026 player set such corners up and
+// never looked at the reply.
+// How far the board has come toward circles: for every corner and pattern that could still make one (three
+// of its four squares hold that pattern, or are empty while someone still holds it), the square of how many
+// pieces of that pattern already face in.
 function promise(g){
   let n = 0;
   for (const k of g.corners) for (let pat = 0; pat < 4; pat++){
@@ -552,21 +555,54 @@ function promise(g){
   }
   return n;
 }
+const WIN = 100000, NEW_PATTERN = 100, BUILD = 2;   // BUILD: how much lining pieces up toward a corner counts
+// what move m, made on g, is worth to the player who made it, from what it does at once
+function worth(g, s, res, m){
+  const seat = g.turn;
+  if (s.over) return s.over.winners.includes(seat) ? WIN : s.over.why === 'quiet' ? -WIN : 0;
+  let v = 0;
+  if (res.circle) v += res.circle.points + (g.players[seat].done[res.circle.pat] ? 0 : NEW_PATTERN);
+  if (res.emptied) v -= PENALTY;
+  if (!res.circle && !res.cleared) v += BUILD * (promise(s) - promise(g));
+  return v + (m.type === 'add' ? 0.2 : 0);
+}
+// would this add or turn leave a piece facing a corner where two others of its pattern already face in?
+function closes(t, m){
+  const q = t.board[m.sq], pat = q ? q.pat : m.pat, f = q ? (q.face + t.die) % 4 : (PRINTED_FACE + t.die) % 4;
+  const R = Math.floor(m.sq/3) + (f >= 2), C = m.sq%3 + (f === 1 || f === 2);
+  const k = t.corners.find(c => c.R === R && c.C === C);
+  return k && facingIn(t, k, pat).filter(sq => sq !== m.sq).length >= 2;
+}
+// the best a player can do from s with a circle, averaged over the four faces of their die: only a move that
+// closes a circle is weighed, since any other gains them little at once
+function chance(s, seat){
+  const t = clone(s);
+  t.turn = seat;
+  let sum = 0;
+  for (let die = 1; die <= 4; die++){
+    t.die = die;
+    let best = 0;
+    for (const m of legalMoves(t)) if (m.type !== 'remove' && closes(t, m)){
+      const u = clone(t), res = applyMove(u, m);
+      const v = u.over ? (u.over.winners.includes(seat) ? WIN : -WIN)
+        : res.circle ? res.circle.points + (t.players[seat].done[res.circle.pat] ? 0 : NEW_PATTERN) - (res.emptied ? PENALTY : 0) : 0;
+      if (v > best) best = v;
+    }
+    sum += best;
+  }
+  return sum / 4;
+}
+// a move is worth what it gains now, less what the next player could then take, plus what this player could take
+// on its own next turn if the board were left as it is. Counting the next player's chance in full (THREAT = 1) made two
+// computers refuse to set anything up: games between them ran to hundreds of turns. The values here were chosen on
+// 17 November 2026 with simulations/ai-2027-vs-2026.js; the figures are in simulations/ai-2027-trials.md.
+const THREAT = 0.3, NEXT_TURN = 0.8;
 function aiChoose(g){
-  const blocked = g.board.every(Boolean) && !turnsCanScore(g);
   let best = null, bestValue = -Infinity;
   for (const m of legalMoves(g)){
-    const s = clone(g), res = applyMove(s, m);
-    const net = (res.circle ? res.circle.points : 0) - (res.emptied ? PENALTY : 0);
-    let value;
-    if (s.over) value = s.over.winners.includes(g.turn) ? 5000 : -5000;
-    else if (net > 0) value = 1000 + net + (g.players[g.turn].done[res.circle.pat] ? 0 : 1000);
-    else if (res.emptied) value = -1000;
-    else {
-      const gain = promise(s) - promise(g);
-      value = 10*gain + {add:2, turn: gain > 0 ? 1 : -5, remove: blocked ? 5 : 0}[m.type];
-    }
-    value += Math.random();
+    const s = clone(g), v = worth(g, s, applyMove(s, m), m);
+    const next = (g.turn + 1) % g.players.length;
+    const value = (s.over ? v : v - THREAT * chance(s, next) + NEXT_TURN * chance(s, g.turn)) + Math.random() * 0.01;
     if (value > bestValue){ best = m; bestValue = value; }
   }
   return best;
@@ -951,11 +987,56 @@ function drawKey(){
   $('#pats').innerHTML = PAT.map((q, pat) => `<span><svg class="pchip" viewBox="0 0 100 100" aria-hidden="true">${bare(0, 0, 100, pat, 0, revealed[pat])}</svg>${q.name} ${q.pts}</span>`).join('');
 }
 
+// ---------- the game record (2027): every game played on this device is kept in this browser and nowhere else ----------
+// One entry per game, written after every turn, so a game left unfinished is kept too. A guest keeps a copy of the
+// host's record. Nothing is sent anywhere: the record leaves the browser only when someone downloads it.
+// the computer is named by its settings in ai.js, so every game says which computer played it
+const RECORDS = '3-quarters-2027-games', COMPUTER = `threat ${THREAT}, next turn ${NEXT_TURN}, build ${BUILD}, new pattern ${NEW_PATTERN}`;
+function records(){ try { return JSON.parse(localStorage.getItem(RECORDS)) || []; } catch { return []; } }
+function keep(r){
+  try { localStorage.setItem(RECORDS, JSON.stringify([...records().filter(x => x.id !== r.id), r])); } catch {}
+  drawRecords();
+}
+function recordStart(){
+  G.record = {id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), started: new Date().toISOString(),
+    computer: COMPUTER, timer: G.timer, first: G.turn,
+    seats: G.players.map(p => ({colour: p.name, by: p.cpu ? 'computer' : 'person'})), turns: [], end: null};
+  keep(G.record);
+}
+function recordTurn(res){
+  const m = res.move;
+  G.record.turns.push({seat: res.by, die: G.die, move: m.type, square: m.sq + 1, pattern: m.pat === undefined ? null : PAT[m.pat].name,
+    circle: res.circle ? {pattern: PAT[res.circle.pat].name, points: res.circle.points} : null,
+    emptied: !!res.emptied, cleared: !!res.cleared, scores: G.players.map(p => p.score)});
+  keep(G.record);
+}
+function recordTimeout(){
+  G.record.turns.push({seat: G.turn, timeout: true});
+  keep(G.record);
+}
+function recordEnd(){
+  G.record.end = {why: G.over.why, winners: G.over.winners.map(i => G.players[i].name), scores: G.players.map(p => p.score),
+    patterns: G.players.map(p => PAT.filter((q, pat) => p.done[pat]).map(q => q.name)), at: new Date().toISOString()};
+  keep(G.record);
+}
+function drawRecords(){
+  const n = records().length;
+  $('#recN').textContent = n === 1 ? '1 game' : `${n} games`;
+}
+$('#recDl').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(records(), null, 1)], {type: 'application/json'}));
+  a.download = '3-quarters-2027-games.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+
 // ---------- the turn ----------
 function start(){
   stopTimer();
   G = createGame(cfg.cpu.slice(0, cfg.n), cfg.timer);
   G.ends = [];                     // the people who have pressed End game
+  recordStart();
   owner = cfg.who.slice(0, cfg.n);
   lines = []; fx = null;
   tales = []; register = []; fired = []; moveNo = 0; leavesSeen = 0; revealed = [false, false, false, false];
@@ -999,6 +1080,7 @@ function play(m){
   phase = 'wait';
   const res = applyMove(G, m);
   moveNo++;
+  recordTurn(res);
   describe(res);
   storyFor(res);
   fx = res;
@@ -1038,6 +1120,7 @@ function finish(){
   }[G.over.why];
   note(typeof text === 'function' ? text() : text);
   storyEnd();
+  recordEnd();
   render();
 }
 function runRing(ms){             // the ring drains over the time left; a guest is sent what the host's clock shows
@@ -1060,6 +1143,7 @@ function timeUp(){
   timerEnds = 0; runRing(0);
   note(`Time ran out: ${cur().name}'s turn passes.`);
   frameOn();
+  recordTimeout();
   if (G.board.some(Boolean)){              // a turn lost to the timer counts as a turn, except on an empty board
     G.quiet.push({seat:G.turn, chose: couldPlace(G, cur())});
     if (quietOver(G)){ phase = 'over'; return finish(); }
@@ -1196,6 +1280,7 @@ function show(v){                 // draw the host's table here
   const keepPick = phase === 'act' && v.phase === 'act', rolled = phase === 'roll' && v.phase === 'act';
   ({G, phase, lines, fx, owner, names} = v);
   ({tales, register, fired, revealed, framePart} = v.story); storyVer++;
+  if (G.record) keep(G.record);
   if (!(keepPick && canAct())) sel = v.sel;
   runRing(v.clock);
   $('#join').hidden = true; $('#game').hidden = false;
@@ -1261,6 +1346,7 @@ $('#resetup').addEventListener('click', () => { setFull(false); stopTimer(); G =
 const room = (new URLSearchParams(location.search).get('room') || '').toUpperCase();
 if (room.length === 5 && [...room].every(c => CODE_CHARS.includes(c))) joinGame(room);
 $('#logo').innerHTML = threeQuarters(1, true);
+drawRecords();
 drawSetup();
 </script>
 </body>
