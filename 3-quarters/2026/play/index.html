@@ -629,7 +629,7 @@ function drawTurn(){
       <svg viewBox="0 0 100 100">${pieceSvg(0, 0, 100, pat, G.turn, PRINTED_FACE, false)}</svg>${PAT[pat].pts} pt${pat ? 's' : ''} · ×${k}</button>`).join('');
   $('#say').textContent = instruction();
   $('#endVote').hidden = phase === 'over' || !people().length;
-  $('#endVote').innerHTML = `To end the game here, every person playing presses their colour; press again to take it back. ${people().map(i => `<button class="tab sm" data-end="${i}" aria-pressed="${G.ends.includes(i)}"${mine(i) ? '' : ' disabled'}>${G.players[i].name}</button>`).join('')}`;
+  $('#endVote').innerHTML = `${people().map(i => `<button class="tab sm" data-end="${i}" aria-pressed="${G.ends.includes(i)}"${mine(i) ? '' : ' disabled'}>End game · ${G.players[i].name}</button>`).join('')}<br>When every person playing has pressed End game, the game ends. Press again to take yours back.`;
   $('#end').hidden = phase !== 'over';
   if (phase === 'over') $('#endText').textContent = lines[0];
 }
