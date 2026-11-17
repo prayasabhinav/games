@@ -68,6 +68,22 @@ a.tab{display:inline-block;text-decoration:none}
 #logCard{grid-area:log}
 #boardWrap{grid-area:board;justify-self:center;width:100%;max-width:440px}
 #board{display:block;width:100%;height:auto}
+.fullrow{text-align:center;margin:8px 0 0}
+/* full screen: the board and the turn, nothing else, so a turn can still be taken; on a phone the board fills the
+   first screen and the turn is below it */
+#game.full{position:fixed;inset:0;z-index:50;margin:0;padding:12px 16px;overflow:auto;background:var(--paper);
+  grid-template-columns:auto minmax(260px,360px);grid-template-rows:none;grid-template-areas:"board turn";justify-content:center;align-items:start}
+#game.full #scoresCard,#game.full #logCard{display:none}
+#game.full #boardWrap{max-width:none;width:auto}
+#game.full #board{width:auto;max-width:100%;height:calc(100dvh - 110px);min-height:0;margin-inline:auto}
+@media (max-width:759px){
+  #game.full{grid-template-columns:minmax(0,1fr);grid-template-areas:"board" "turn"}
+  #game.full #turn{position:static}
+  #game.full{padding-bottom:64px}
+  #game.full .fullrow{position:fixed;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom,0px));z-index:60;margin:0}
+  #game.full #board{height:calc(100dvh - 150px);min-height:300px}
+  #game.full #boardWrap{width:100%}
+}
 @media (max-width:759px){
   #turn{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:#fffdf6;padding:10px 12px}
 }
@@ -283,6 +299,7 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
       <span>rim and letter: whose piece</span>
       <span>number: its points</span>
     </div>
+    <p class="fullrow"><button class="tab sm" id="full">Full screen</button></p>
   </div>
 
   <section id="scoresCard" class="card"><h3>Scores</h3><div id="scores"></div></section>
@@ -931,13 +948,22 @@ $('#endVote').addEventListener('click', e => {
   if (b && !b.disabled) act('end', +b.dataset.end);
 });
 $('#again').addEventListener('click', start);
+// full screen: the browser's own where it has one; where it has none (an iPhone), the page's fixed layer alone
+function setFull(on){
+  $('#game').classList.toggle('full', on);
+  $('#full').textContent = on ? 'Leave full screen' : 'Full screen';
+  if (on && document.fullscreenEnabled) $('#game').requestFullscreen().catch(() => {});
+  if (!on && document.fullscreenElement) document.exitFullscreen();
+}
+$('#full').addEventListener('click', () => setFull(!$('#game').classList.contains('full')));
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && $('#game').classList.contains('full')) setFull(false); });
 $('#tell').addEventListener('click', e => {      // the form opens over the page; the frame loads on first open
   e.preventDefault();
   if (!$('#formFrame').src) $('#formFrame').src = $('#tell').href;
   $('#formBox').showModal();
 });
 $('#formClose').addEventListener('click', () => $('#formBox').close());
-$('#resetup').addEventListener('click', () => { stopTimer(); G = null; $('#game').hidden = true; $('#setup').hidden = false; lobby(); drawSetup(); });
+$('#resetup').addEventListener('click', () => { setFull(false); stopTimer(); G = null; $('#game').hidden = true; $('#setup').hidden = false; lobby(); drawSetup(); });
 
 const room = (new URLSearchParams(location.search).get('room') || '').toUpperCase();
 if (room.length === 5 && [...room].every(c => CODE_CHARS.includes(c))) joinGame(room);

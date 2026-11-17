@@ -79,7 +79,7 @@ a.tab{display:inline-block;text-decoration:none}
 #logCard{grid-area:log}
 #storyCard{grid-area:story}
 #boardWrap{grid-area:board;justify-self:center;width:100%;max-width:440px}
-#board{display:block;width:100%;height:auto}
+#board{display:block;width:100%;height:auto;margin-inline:auto}
 @media (max-width:759px){
   #turn{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--vellum-2);padding:10px 12px}
   h1{font-size:40px}
@@ -90,15 +90,57 @@ a.tab{display:inline-block;text-decoration:none}
   #board{width:auto;height:min(calc(100vh - 120px),1000px);min-height:560px}
   #story{max-height:60vh;overflow:auto}
 }
-@media (min-width:1180px){
-  #game{grid-template-columns:minmax(280px,400px) auto minmax(300px,380px);grid-template-rows:auto 1fr;grid-template-areas:"scores board turn" "story board log"}
-  #story{max-height:calc(100vh - 330px);min-height:260px}
+.col{display:contents}
+.fullrow{text-align:center;margin:8px 0 0}
+/* full screen: the board and the turn, nothing else, so a turn can still be taken; on a phone the board fills the
+   first screen and the turn is below it */
+#game.full{position:fixed;inset:0;z-index:50;margin:0;padding:12px 16px;overflow:auto;background:var(--vellum);
+  grid-template-columns:auto minmax(260px,380px);grid-template-rows:none;grid-template-areas:"board turn" "subs subs";justify-content:center;align-items:start}
+#game.full #colL,#game.full #logCard{display:none}
+#subs{display:none}
+/* in full screen the story runs as a subtitle: its own row under the board and the turn, centred, never over the board */
+#game.full #subs{display:block;grid-area:subs;justify-self:center;width:min(64ch,100%);min-height:3.6em;margin:0;padding:8px 18px 9px;
+  background:rgba(46,41,35,.88);color:var(--vellum-2);font:400 22px/1.35 var(--head);text-align:center;border-radius:3px;box-shadow:0 0 0 1px var(--gold)}
+#game.full #subs:empty{visibility:hidden}
+#subs b{display:block;font:400 13px/1 var(--sc);letter-spacing:.14em;color:var(--gold-pale);margin-bottom:4px}
+#game.full #colR{display:block;grid-area:turn;height:auto;min-height:0;position:static}
+#game.full #boardWrap{max-width:none;width:auto}
+#game.full #board{width:auto;max-width:100%;height:calc(100dvh - 290px);min-height:0}
+@media (max-width:759px){
+  #game.full{grid-template-columns:minmax(0,1fr);grid-template-areas:"subs" "board" "turn"}
+  #game.full #colR{display:contents}
+  #game.full #subs{font-size:18px}
+  #game.full #turn{position:static}
+  #game.full{padding-bottom:64px}
+  #game.full .fullrow{position:fixed;left:0;right:0;bottom:max(10px,env(safe-area-inset-bottom,0px));z-index:60;margin:0}
+  #game.full #board{height:calc(100dvh - 240px);min-height:300px}
+  #game.full #boardWrap{width:100%}
 }
+/* wide: the game fits the window under the header (about 190px) on first view; each side is one column of cards,
+   and the story and the log take what height is left in their column, scrolling inside it */
+@media (min-width:1180px){
+  #game{grid-template-columns:minmax(280px,400px) auto minmax(300px,380px);grid-template-rows:none;grid-template-areas:"left board right"}
+  .col{display:flex;flex-direction:column;gap:18px;height:calc(100vh - 206px);min-height:620px}
+  #colL{grid-area:left}
+  #colR{grid-area:right}
+  #board{height:min(calc(100vh - 300px),1000px);min-height:550px}
+  #boardWrap .legend{contain:inline-size}   /* the key wraps to the board's width instead of widening its column */
+  #storyCard,#logCard{flex:1 1 0;min-height:160px;display:flex;flex-direction:column}
+  #story,#log{flex:1 1 0;min-height:0;max-height:none;overflow:auto}
+}
+/* wide but short (a 768px laptop): fitting under the header would shrink the board, so the board takes the window's
+   height and the side columns stay beside it once the header has scrolled away */
+@media (min-width:1180px) and (max-height:899px){
+  .col{position:sticky;top:12px;height:calc(100vh - 24px);min-height:0}
+  #board{height:calc(100vh - 165px);min-height:480px}
+}
+#story .wait,#story .w.hid{display:none}
+#endVote{font-size:15px;line-height:1.35}
 
 .turnhead{display:flex;align-items:center;gap:10px}
 .turnhead .name{flex:1;min-width:0}
 .turnhead b{font:400 34px/1 var(--head)}
-.turnhead small{color:var(--ink-soft);margin-left:6px;font-style:italic}
+.turnhead small{display:inline-block;color:var(--ink-soft);margin-left:6px;font-style:italic}
 #die{width:84px;height:84px;padding:0;border:0;background:none;cursor:pointer;flex:none;font:inherit;color:inherit}
 #die:disabled{cursor:default}
 #die svg{width:100%;height:100%;overflow:visible}
@@ -275,6 +317,7 @@ footer{margin-top:26px;padding-top:10px;border-top:1px solid rgba(180,138,60,.6)
 </section>
 
 <section id="game" hidden>
+  <div class="col" id="colR">
   <section id="turn" class="card" aria-live="polite">
     <div class="turnhead">
       <svg class="chip" viewBox="0 0 20 20" aria-hidden="true"><circle id="whoChip" cx="10" cy="10" r="7.5" stroke="#2e2923" stroke-width="1.5"/></svg>
@@ -307,6 +350,8 @@ footer{margin-top:26px;padding-top:10px;border-top:1px solid rgba(180,138,60,.6)
       <p><a id="tell" href="https://forms.prayasabhinav.net/f/play-3-quarters" target="_blank" rel="noopener">Tell me how the game went</a></p>
     </div>
   </section>
+  <section id="logCard" class="card"><h3>What happened</h3><ol id="log" reversed></ol></section>
+  </div>
 
   <div id="boardWrap">
     <svg id="board" role="group" aria-label="The board"></svg>
@@ -316,11 +361,14 @@ footer{margin-top:26px;padding-top:10px;border-top:1px solid rgba(180,138,60,.6)
       <span>number: its points</span>
     </div>
     <div class="legend" id="pats"></div>
+    <p class="fullrow"><button class="tab sm" id="full">Full screen</button></p>
   </div>
 
+  <div class="col" id="colL">
   <section id="scoresCard" class="card"><h3>Scores</h3><div id="scores"></div></section>
   <section id="storyCard" class="card" aria-live="polite"><h3>The story so far</h3><div id="story"></div></section>
-  <section id="logCard" class="card"><h3>What happened</h3><ol id="log" reversed></ol></section>
+  </div>
+  <p id="subs" aria-hidden="true"></p>
 </section>
 
 <details class="frame">
@@ -825,18 +873,20 @@ function cornersFig(){
   </svg>`;
 }
 function leaf(t, n){
+  const i = n - 1;
   const s = t.id === 1 ? EPISODE[t.pat] : t.id === 0 ? {...FRAME, parts: FRAME.parts.slice(0, framePart)} : TALE[t.id];
   const mark = t.id === 1 ? threeQuarters(t.pat, true) : STAR;
-  const reg = t.id === 5 ? `<ol class="reg" reversed>${register.map(e => `<li>${e.struck ? `<s>${e.text}</s>` : e.text}</li>`).reverse().join('')}</ol>` : '';
+  const reg = t.id === 5 ? `<ol class="reg" reversed>${register.map((e, j) => [e, j]).reverse().map(([e, j]) => voiced(`r${j}`, e.struck ? `<s>${e.text}</s>` : e.text, 'li', '', '', 'The register')).join('')}</ol>` : '';
   return `<article class="leaf${n > leavesSeen ? ' new' : ''}"><p class="num">Leaf ${ROMAN(n)}</p>
     <h4><svg viewBox="0 0 100 100" aria-hidden="true">${mark}</svg><span>${s.title}</span></h4>
-    <p class="why">${t.why}</p>${reg}
-    ${s.parts.map(([k, text]) => `<p class="${k}"><span class="tag">${TAG[k]}</span>${text}</p>`).join('')}
-    ${s.fig ? cornersFig() : ''}${t.add ? `<p>${t.add}</p>` : ''}</article>`;
+    ${voiced(`${i}h`, t.why, 'p', 'why', '', s.title)}${reg}
+    ${s.parts.map(([k, text], j) => voiced(`${i}.${j}`, text, 'p', k, `<span class="tag">${TAG[k]}</span>`, TAG[k])).join('')}
+    ${s.fig ? cornersFig() : ''}${t.add ? voiced(`${i}a`, t.add, 'p') : ''}</article>`;
 }
 function drawStory(){
   if (storyDrawn === storyVer) return;
   storyDrawn = storyVer;
+  listen();
   // the frame first until it is all told, then newest first, with the register and then the frame last
   const rank = t => t.id === 0 ? (framePart < FRAME.parts.length ? -1 : 2) : t.id === 5 ? 1 : 0;
   const order = tales.map((t, i) => [t, i + 1]).reverse().sort((a, b) => rank(a[0]) - rank(b[0]));
@@ -846,6 +896,57 @@ function drawStory(){
     + order.map(([t, n]) => leaf(t, n)).join('');
   leavesSeen = tales.length;
 }
+
+// ---------- the story, told as if aloud (2027) ----------
+// Each piece appears word by word at about a speaking pace, one after another in the order it was told: the frame's
+// next part, a new leaf's line saying what the game did, then its parts, a new line in the register. heard[key] is
+// how many words of a piece have appeared; a piece not yet reached is not shown. Each device tells its own.
+const WORD = 210, STOP = 520, PAUSE = 200;      // ms after a word; after one ending a sentence; after a comma or semicolon
+let heard = {}, queue = [], lastTales = 0, lastFrame = 0;
+const noMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function voiced(key, html, el, cls = '', lead = '', label = ''){
+  const n = heard[key] ?? Infinity;
+  let w = 0;
+  const body = n === Infinity ? html : html.replace(/(<[^>]+>)|([^\s<]+\s*)/g, (m, tag) => tag || `<span class="w${w++ < n ? '' : ' hid'}">${m}</span>`);
+  return `<${el} data-k="${key}" data-l="${label.replace(/<[^>]+>/g, '')}" class="${cls}${n === 0 ? ' wait' : ''}">${lead}${body}</${el}>`;
+}
+// what has been told, in order; a key seen for the first time joins the queue
+function listen(){
+  if (tales.length < lastTales || framePart < lastFrame){ heard = {}; queue = []; }   // a new game; a guest is never sent start()
+  lastTales = tales.length; lastFrame = framePart;
+  const keys = [];
+  tales.forEach((t, i) => {
+    keys.push(`${i}h`);
+    if (t.id === 5) register.forEach((e, j) => keys.push(`r${j}`));
+    (t.id === 0 ? FRAME.parts.slice(0, framePart) : (t.id === 1 ? EPISODE[t.pat] : TALE[t.id]).parts).forEach((p, j) => keys.push(`${i}.${j}`));
+    if (t.add) keys.push(`${i}a`);
+  });
+  keys.filter(k => !(k in heard)).forEach(k => { heard[k] = noMotion ? Infinity : 0; queue.push(k); });
+}
+// one word at a time, from the first piece in the queue that is not yet all shown
+function speak(){
+  while (queue.length){
+    const k = queue[0], el = $('#story').querySelector(`[data-k="${k}"]`), w = el && el.querySelector('.w.hid');
+    if (!w){ heard[k] = Infinity; queue.shift(); continue; }
+    el.classList.remove('wait');
+    w.classList.remove('hid');
+    heard[k]++;
+    subtitle(el);
+    const t = w.textContent.trim();
+    return setTimeout(speak, /[.?!:)]$/.test(t) ? STOP : /[,;]$/.test(t) ? PAUSE + WORD : WORD);
+  }
+  if (Date.now() - lastWord > 5000) $('#subs').textContent = '';     // the last line stays a few seconds, then goes
+  setTimeout(speak, 300);
+}
+// in full screen the story runs as a subtitle: the sentence being told, after its label (Source, Speculation, a title)
+let lastWord = 0;
+function subtitle(el){
+  lastWord = Date.now();
+  const said = [...el.querySelectorAll('.w:not(.hid)')].map(w => w.textContent).join('');
+  const line = said.split(/(?<=[.?!])\s+(?=\S)/).pop();
+  $('#subs').innerHTML = (el.dataset.l ? `<b>${el.dataset.l}</b>` : '') + line;
+}
+speak();
 function drawKey(){
   $('#pats').innerHTML = PAT.map((q, pat) => `<span><svg class="pchip" viewBox="0 0 100 100" aria-hidden="true">${bare(0, 0, 100, pat, 0, revealed[pat])}</svg>${q.name} ${q.pts}</span>`).join('');
 }
@@ -858,6 +959,7 @@ function start(){
   owner = cfg.who.slice(0, cfg.n);
   lines = []; fx = null;
   tales = []; register = []; fired = []; moveNo = 0; leavesSeen = 0; revealed = [false, false, false, false];
+  heard = {}; queue = [];
   framePart = 1; tell(0, `Told as the game begins, one part more with each turn.`);
   note(`Coin toss: ${cur().name} starts.`);
   $('#setup').hidden = true; $('#game').hidden = false;
@@ -1139,13 +1241,22 @@ $('#endVote').addEventListener('click', e => {
   if (b && !b.disabled) act('end', +b.dataset.end);
 });
 $('#again').addEventListener('click', start);
+// full screen: the browser's own where it has one; where it has none (an iPhone), the page's fixed layer alone
+function setFull(on){
+  $('#game').classList.toggle('full', on);
+  $('#full').textContent = on ? 'Leave full screen' : 'Full screen';
+  if (on && document.fullscreenEnabled) $('#game').requestFullscreen().catch(() => {});
+  if (!on && document.fullscreenElement) document.exitFullscreen();
+}
+$('#full').addEventListener('click', () => setFull(!$('#game').classList.contains('full')));
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && $('#game').classList.contains('full')) setFull(false); });
 $('#tell').addEventListener('click', e => {      // the form opens over the page; the frame loads on first open
   e.preventDefault();
   if (!$('#formFrame').src) $('#formFrame').src = $('#tell').href;
   $('#formBox').showModal();
 });
 $('#formClose').addEventListener('click', () => $('#formBox').close());
-$('#resetup').addEventListener('click', () => { stopTimer(); G = null; $('#game').hidden = true; $('#setup').hidden = false; lobby(); drawSetup(); });
+$('#resetup').addEventListener('click', () => { setFull(false); stopTimer(); G = null; $('#game').hidden = true; $('#setup').hidden = false; lobby(); drawSetup(); });
 
 const room = (new URLSearchParams(location.search).get('room') || '').toUpperCase();
 if (room.length === 5 && [...room].every(c => CODE_CHARS.includes(c))) joinGame(room);
