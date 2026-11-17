@@ -133,7 +133,6 @@ a.tab{display:inline-block;text-decoration:none}
 
 /* board */
 .rowno{font:20px var(--hand);fill:var(--graphite-soft);text-anchor:middle}
-.offtxt{font:24px var(--head);fill:var(--graphite);text-anchor:middle}
 .pt{font-family:var(--hand);fill:var(--graphite);text-anchor:middle}
 .own{font-family:var(--hand);fill:var(--graphite);text-anchor:middle}
 .hit{cursor:pointer;outline:none}
@@ -180,9 +179,6 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
     <pattern id="p-black" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(40)">
       <rect width="5" height="5" fill="#4a4a4f"/><path d="M0 2.5H5" stroke="#38383c" stroke-width="1.2"/>
     </pattern>
-    <pattern id="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <path d="M0 4.5H9" stroke="#4a4a4f" stroke-width="1" opacity=".25"/>
-    </pattern>
   </defs>
 </svg>
 
@@ -203,13 +199,13 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
 </header>
 <details class="versions">
   <summary>These are the 2026 rules, still being tested · compare the versions</summary>
-  <p>Both versions use the same board, pieces and moves; they differ in how a game is won. The figures below come from tens of thousands of games played between computer players. The 2026 rules are still being tried with people, and games between people may come out differently.</p>
+  <p>Both versions use the same board, pieces and moves. The 2026 rules change how a game is won, use the whole board whatever the number of players, and give each player a remove back when nobody has one left. The figures below come from tens of thousands of games played between computer players. The 2026 rules are still being tried with people, and games between people may come out differently.</p>
   <h4>2022: first to 25 points</h4>
   <p>Games are short: a median of 16 to 20 turns, depending on the number of players.</p>
   <p>Nothing in the game explains the number 25. A circle of black pieces on a yellow square is worth 24 points, so one lucky circle can all but decide a game. The player who starts wins 51% of three-player games; a fair share is 33%.</p>
   <h4>2026: a circle in each of the four patterns</h4>
-  <p>The target comes from the pieces themselves, and the scoreboard shows which patterns each player still needs. The player who starts wins 41% of three-player games, down from 51%; a fair share is still 33%. No game can stall. A player whose turn completes a round in which everyone only turned a piece and nobody made a circle, when they could have added or removed a piece, ends the game and cannot win it. Stalling ends the game in someone else's favour.</p>
-  <p>What this costs: games run longer, a median of 36 to 48 turns depending on the number of players. About 1 in 300 two-player games ends on a quiet round.</p>
+  <p>The target comes from the pieces themselves, and the scoreboard shows which patterns each player still needs. Between computer players, every game was won this way, with two, three or four players. The player who starts wins 42% of three-player games, down from 51%; a fair share is still 33%. No game can stall. A player whose turn completes a round in which everyone only turned a piece and nobody made a circle, when they could have added or removed a piece, ends the game and cannot win it. Stalling ends the game in someone else's favour. If every player still needs a pattern that cannot make a circle, the pieces go back to their owners and play goes on.</p>
+  <p>What this costs: games run longer, a median of 32 to 47 turns depending on the number of players. A player who stalls or lets the timer run out can still end a game on a quiet round.</p>
   <p><a href="../../2022/play/">Play the 2022 rules</a> · <a href="./">Play the 2026 rules</a></p>
 </details>
 
@@ -219,7 +215,7 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
     <button class="tab" data-n="2">2</button><button class="tab" data-n="3">3</button><button class="tab" data-n="4">4</button>
   </div>
   <div id="seats"></div>
-  <p class="note" id="rowsNote"></p>
+  <p class="note">Every game uses the whole board, whatever the number of players.</p>
   <div class="row"><label><input type="checkbox" id="timer" checked> 20-second move timer</label></div>
   <div class="row"><button class="tab big" id="start">Toss the coin and start</button></div>
   <div id="net">
@@ -293,16 +289,16 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
 <details>
   <summary>The rules</summary>
   <ol>
-    <li><b>Set up.</b> Play on the red rows with 2 players, add the green rows for 3, and the blue row for 4. Each player takes their eight quarter-circle pieces. Toss a coin to see who starts.</li>
+    <li><b>Set up.</b> Play on the whole board, whatever the number of players. Each player takes their eight quarter-circle pieces. Toss a coin to see who starts.</li>
     <li><b>Pieces.</b> A piece fills one square and faces one of its four corners. Its pattern sets its points: crosshatched 1, dotted 2, plain 3, black 4.</li>
     <li><b>A turn.</b> Roll the die (d4) first. Then arrange one piece: add one of yours to an empty square, turn any piece on the board, yours or another player's, or remove one. A piece you add or turn goes round as many corners as the die shows; a 4 turns it full circle.</li>
     <li><b>Three quarters.</b> Three pieces in three of the four squares around one shared corner, each facing that corner, make a 3/4 circle. All three must have the same pattern. They can belong to anyone.</li>
-    <li><b>Remove.</b> To remove a quadrant, place a quadrant with the same pattern on it. Take both (without adding the points that both pieces have). A player can remove a piece only three times in a game.</li>
+    <li><b>Remove.</b> To remove a quadrant, place a quadrant with the same pattern on it. Take both (without adding the points that both pieces have). A player can remove a piece only three times. When nobody has a remove left, each player gets one back.</li>
     <li><b>Score.</b> The player who completes the 3/4 circle removes the pieces from the board and takes as many points as the constituent pieces. If one of its quadrants is on a yellow square, the score is doubled.</li>
     <li><b>Keep the board.</b> Avoid emptying the board: the player whose move empties it loses 10 points.</li>
     <li><b>Time.</b> Each move has to be made in 20 s. Use a mobile to keep time.</li>
     <li><b>Win.</b> The first player to complete a circle in each of the four patterns wins. The scoreboard shows which patterns each player has made.</li>
-    <li><b>Dead patterns.</b> If no player can still make every pattern they lack, the game ends and the highest score wins. A pattern can never make a circle again when every remove is spent and no corner has enough of its pieces on the board and in hand to reach three.</li>
+    <li><b>Start again.</b> If every player still needs a pattern that cannot make a circle as things stand (no corner can gather three of it, and nobody holding a piece of it has a remove left), every piece on the board goes back to its owner and play goes on.</li>
     <li><b>Quiet round.</b> A whole round in which every player only turned a piece and nobody made a circle. If your turn completes one, and you could have added or removed a piece instead, the game ends and you cannot win. The highest score among the other players wins. If turning was your only move, play goes on. A turn lost to the timer counts as turning a piece, except while the board is empty.</li>
   </ol>
 </details>
@@ -312,11 +308,11 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
   <ol>
     <li>A new piece is set down as the pieces are printed, facing the lower-right corner of its square. It then goes round clockwise as many corners as the die shows: 1 faces lower-left, 2 upper-left, 3 upper-right, and 4 brings it full circle back to lower-right. You choose the square and the pattern; the die chooses the corner.</li>
     <li>Turning is always clockwise. A 4 turns a piece full circle, so it ends where it began; that still counts as your action.</li>
-    <li>A 3/4 circle can only form round a corner shared by four squares of the rows in play. Rows not in play are shown greyed and hatched, and take no pieces.</li>
+    <li>A 3/4 circle can only form round a corner shared by four squares.</li>
     <li>The pieces of a completed circle go back to their owners' hands and can be played again.</li>
-    <li>A remove does not use the die. You cover any piece, your own or another player's, with a piece of the same pattern from your hand, and both come off. The covered piece goes back to its owner and yours goes back to you. Nobody scores. It uses one of your three removes.</li>
+    <li>A remove does not use the die. You cover any piece, your own or another player's, with a piece of the same pattern from your hand, and both come off. The covered piece goes back to its owner and yours goes back to you. Nobody scores. It uses one of your removes.</li>
     <li>The 10-point penalty falls on whoever's move leaves the board empty, whether by a circle or a remove; a circle's points are added first. Scores can go below zero.</li>
-    <li>The win is checked after every move: the first to have completed a circle in all four patterns wins at once. Points still count: they decide the winner when the game ends on a stuck board or a dead pattern.</li>
+    <li>The win is checked after every move: the first to have completed a circle in all four patterns wins at once. Points still count: they decide the winner when a quiet round ends the game.</li>
     <li>The timer is on, as the rules ask; the table can turn it off before starting. With it on, the 20 seconds start when a person's turn starts, die roll included. If they run out, the turn passes with no action. Computer players are not timed.</li>
     <li>Every turn has a legal action, so there is no rule for passing: when the board holds a piece it can be turned, and when it is empty every piece is back in hand and can be added.</li>
     <li>If nobody can make a remove, now or after more pieces are added, and no corner can get three pieces of one pattern round it from the pieces there, its empty squares and the pieces in hand, no circle can ever be made again. The game then ends and the highest score wins (shared on a tie).</li>
@@ -350,7 +346,7 @@ const SEATS = [
   {name:'Graphite', wash:'#a4a4aa'},
   {name:'White', wash:'#ffffff'},
 ];
-const ROWS_IN_PLAY = {2:4, 3:7, 4:8};
+const ROWS = 8;                                  // every game uses the whole board
 const YELLOW = [1*3+2, 4*3+1, 7*3+2];          // row 2 col 3, row 5 col 2, row 8 col 3
 const PRINTED_FACE = 2;                          // printed pieces face the lower-right corner
 const CORNER = ['upper-left', 'upper-right', 'lower-right', 'lower-left'];   // clockwise
@@ -358,7 +354,7 @@ const PENALTY = 10, REMOVES = 3, SECONDS = 20;
 
 // Squares are numbered row by row, three to a row. A piece faces corner 0..3 of its square.
 function createGame(cpu, timer){
-  const rows = ROWS_IN_PLAY[cpu.length];
+  const rows = ROWS;
   return {rows, timer, corners: cornersOf(rows), board: Array(rows*3).fill(null),
     players: cpu.map((c, i) => ({...SEATS[i], cpu:c, score:0, removes:REMOVES, hand:[2,2,2,2], done:[false,false,false,false]})),
     turn: Math.floor(Math.random()*cpu.length), die:0, over:null, nextId:1, quiet:[]};
@@ -383,23 +379,13 @@ const facingIn = (g, k, pat) => k.around.filter(({sq, f}) => g.board[sq] && g.bo
 const canRemove = (g, p) => p.removes > 0 && g.board.some(q => q && p.hand[q.pat] > 0);
 // some corner has three pieces of one pattern round it, so turning alone could still score
 const turnsCanScore = g => g.corners.some(k => [0,1,2,3].some(pat => k.around.filter(({sq}) => g.board[sq] && g.board[sq].pat === pat).length >= 3));
-// some corner could still get three pieces of one pattern round it: those already there, plus as many
-// as its empty squares and the pieces of that pattern in hand allow; on a full board, those already there
-const circleStillPossible = g => g.corners.some(k => [0,1,2,3].some(pat => {
-  const there = k.around.filter(({sq}) => g.board[sq] && g.board[sq].pat === pat).length;
-  const empty = k.around.filter(({sq}) => !g.board[sq]).length;
+// this pattern cannot make a circle as things stand: no corner can gather three of it from the board and the
+// hands, and nobody holding a piece of it has a remove to free one already placed
+const locked = (g, pat) => {
   const held = g.players.reduce((a, p) => a + p.hand[pat], 0);
-  return there + Math.min(empty, held) >= 3;
-}));
-// a remove is possible now, or could become possible once more pieces are added
-const removeStillPossible = (g, p) => canRemove(g, p) || (p.removes > 0 && p.hand.some(Boolean) && g.board.some(q => !q));
-// no circle and no remove can ever happen again; adding only fills squares, so this cannot undo itself
-const stuck = g => !g.players.some(p => removeStillPossible(g, p)) && !circleStillPossible(g);
-// a pattern can never make a circle again: every remove is spent, and no corner has enough of it on its
-// squares and in hand to reach three (a placed piece leaves only in a circle of its own pattern or by a remove)
-const patternDead = (g, pat) => !g.players.some(p => p.removes > 0) &&
-  !g.corners.some(k => k.around.filter(({sq}) => g.board[sq] && g.board[sq].pat === pat).length + g.players.reduce((a, p) => a + p.hand[pat], 0) >= 3);
-const nobodyCanFinish = g => g.players.every(p => p.done.some((d, pat) => !d && patternDead(g, pat)));
+  return !g.corners.some(k => k.around.filter(({sq}) => g.board[sq] && g.board[sq].pat === pat).length + Math.min(k.around.filter(({sq}) => !g.board[sq]).length, held) >= 3)
+    && !g.players.some(p => p.removes > 0 && p.hand[pat] > 0);
+};
 // the player could add a piece or remove one, so a turn now is a choice, not the only move left
 const couldPlace = (g, p) => p.hand.some(Boolean) && g.board.some(q => !q) || canRemove(g, p);
 // a whole round of turns with no circle, closed by a player who chose to turn: that player cannot win,
@@ -411,10 +397,6 @@ function quietOver(g){
   const top = Math.max(...left.map(i => g.players[i].score));
   g.over = {winners: left.filter(i => g.players[i].score === top), why: 'quiet', closer: last.seat};
   return true;
-}
-function onPoints(g, why){
-  const top = Math.max(...g.players.map(p => p.score));
-  g.over = {winners: g.players.flatMap((p, i) => p.score === top ? [i] : []), why};
 }
 
 function legalMoves(g){
@@ -444,6 +426,7 @@ function applyMove(g, m){
     g.players[t.owner].hand[t.pat]++;
     g.board[m.sq] = null;
     me.removes--;
+    if (g.players.every(p => !p.removes)) g.players.forEach(p => p.removes = 1);   // nobody has a remove: each gets one back
   }
   if (m.type !== 'remove'){
     const k = facedCorner(g, m.sq), sqs = k ? facingIn(g, k, g.board[m.sq].pat) : [];
@@ -460,8 +443,10 @@ function applyMove(g, m){
   if (hadPieces && !g.board.some(Boolean)){ res.emptied = true; me.score -= PENALTY; }
   if (m.type === 'turn' && !res.circle) g.quiet.push({seat:g.turn, chose}); else g.quiet = [];
   if (me.done.every(Boolean)) g.over = {winners:[g.turn], why:'four'};
-  else if (stuck(g)) onPoints(g, 'stuck');
-  else if (nobodyCanFinish(g)) onPoints(g, 'dead');
+  else if (g.players.every(p => p.done.some((d, pat) => !d && locked(g, pat)))){   // nobody can finish: start the board again
+    g.board.forEach((q, sq) => { if (q){ g.players[q.owner].hand[q.pat]++; g.board[sq] = null; } });
+    res.cleared = true;
+  }
   else quietOver(g);
   return res;
 }
@@ -585,13 +570,7 @@ function drawBoard(){
   let h = '';
   for (let r = 0; r < 8; r++){
     h += `<text class="rowno" x="${PADL/2}" y="${Y(r) + S/2 + 7}">${r + 1}</text>`;
-    h += `<g${r < G.rows ? '' : ' opacity=".4"'}>${[0,1,2].map(c => squareSvg(r, c)).join('')}</g>`;
-  }
-  if (G.rows < 8){
-    const top = Y(G.rows) - GAP/2;
-    h += `<rect x="${PADL - 6}" y="${top}" width="${W - PADL + 2}" height="${H - top}" fill="url(#hatch)"/>
-      <rect x="${PADL + 8}" y="${top + 22}" width="${3*S + 2*GAP - 16}" height="40" rx="8" fill="#fbf8ef" stroke="#8a8a90" stroke-width="1.2"/>
-      <text class="offtxt" x="${PADL + (3*S + 2*GAP)/2}" y="${top + 50}">${G.rows === 4 ? 'rows 5 to 8 join with more players' : 'row 8 joins with four players'}</text>`;
+    h += `<g>${[0,1,2].map(c => squareSvg(r, c)).join('')}</g>`;
   }
   G.board.forEach((q, sq) => {
     if (q) h += `<g data-id="${q.id}">${pieceSvg(X(sq%3), Y(Math.floor(sq/3)), S, q.pat, q.owner, q.face, true)}</g>`;
@@ -720,14 +699,13 @@ function describe(res){
   if (m.type === 'remove') note(`${p.name} covered ${whose(res.gone[0].owner)} ${PAT[res.gone[0].pat].name} piece at ${where(m.sq)} and took both off. ${p.removes} remove${p.removes === 1 ? '' : 's'} left.`);
   if (res.circle) note(`${p.name} completed a 3/4 circle of ${PAT[res.circle.pat].name} pieces: ${res.circle.base} points${res.circle.doubled ? `, doubled to ${res.circle.points}` : ''}.`);
   if (res.emptied) note(`The board is empty: ${p.name} loses ${PENALTY}.`);
+  if (res.cleared) note(`Every player still needs a pattern that cannot make a circle as things stand, so every piece goes back to its owner and play goes on.`);
 }
 function finish(){
   const names = G.over.winners.map(i => G.players[i].name);
   const onPts = `${names.join(' and ')} ${names.length > 1 ? 'share the win' : 'wins'} on points.`;
   const text = {
     four: `${names[0]} has a circle in all four patterns and wins.`,
-    stuck: `No circle can be made any more. ${onPts}`,
-    dead: `Nobody can complete all four patterns any more: a pattern each player still needs can never make a circle again. ${onPts}`,
     quiet: () => `A whole round passed with only pieces turned and no circle. ${G.players[G.over.closer].name} ended the game by turning a piece when they could have added or removed one, so they cannot win. ${onPts}`,
   }[G.over.why];
   note(typeof text === 'function' ? text() : text);
@@ -768,7 +746,6 @@ function drawSetup(){
   $('#seats').innerHTML = SEATS.slice(0, cfg.n).map((s, i) => `<div class="seat">${chip(s.wash)}<b>${s.name}</b>
     <span class="toggle">${holders.map(([w, label]) => `<button class="tab sm" data-seat="${i}" data-who="${w}" aria-pressed="${!cfg.cpu[i] && cfg.who[i] === w}">${esc(label)}</button>`).join('')}<button class="tab sm" data-seat="${i}" data-cpu aria-pressed="${cfg.cpu[i]}">computer</button></span></div>`).join('');
   $('#timer').checked = cfg.timer;
-  $('#rowsNote').textContent = {2:'Two players use the red rows, 1 to 4.', 3:'Three players add the green rows, 5 to 7.', 4:'Four players add the blue row, 8: the whole board.'}[cfg.n];
   $('#joined').textContent = net.guests.length ? `Joined: ${net.guests.map(g => g.name).join(', ')}.` : 'Nobody has joined yet.';
 }
 $('#setup').addEventListener('click', e => {
