@@ -208,8 +208,8 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
   <p>Games are short: a median of 16 to 20 turns, depending on the number of players.</p>
   <p>Nothing in the game explains the number 25. A circle of black pieces on a yellow square is worth 24 points, so one lucky circle can all but decide a game. The player who starts wins 51% of three-player games; a fair share is 33%.</p>
   <h4>2026: a circle in each of the four patterns</h4>
-  <p>The target comes from the pieces themselves, and the scoreboard shows which patterns each player still needs. The player who starts wins 41% of three-player games, down from 51%; a fair share is still 33%. No game can stall: if a whole round passes in which every player only turns a piece and nobody completes a circle, the game ends with no winner, so neither the leader nor a player holding the game back gains from it.</p>
-  <p>What this costs: games run longer, a median of 36 to 48 turns. About one two-player game in sixty ends on a quiet round, with no winner.</p>
+  <p>The target comes from the pieces themselves, and the scoreboard shows which patterns each player still needs. The player who starts wins 41% of three-player games, down from 51%; a fair share is still 33%. No game can stall. A player whose turn completes a round in which everyone only turned a piece and nobody made a circle, when they could have added or removed a piece, ends the game and cannot win it. Stalling ends the game in someone else's favour.</p>
+  <p>What this costs: games run longer, a median of 36 to 48 turns depending on the number of players. About 1 in 300 two-player games ends on a quiet round.</p>
   <p><a href="../../2022/play/">Play the 2022 rules</a> · <a href="./">Play the 2026 rules</a></p>
 </details>
 
@@ -303,7 +303,7 @@ footer{margin-top:26px;padding-top:10px;border-top:1.4px dashed var(--graphite-s
     <li><b>Time.</b> Each move has to be made in 20 s. Use a mobile to keep time.</li>
     <li><b>Win.</b> The first player to complete a circle in each of the four patterns wins. The scoreboard shows which patterns each player has made.</li>
     <li><b>Dead patterns.</b> If no player can still make every pattern they lack, the game ends and the highest score wins. A pattern can never make a circle again when every remove is spent and no corner has enough of its pieces on the board and in hand to reach three.</li>
-    <li><b>Quiet round.</b> If a whole round passes in which every player only turned a piece, and nobody completed a circle, the game ends with no winner. A turn lost to the timer counts as a quiet turn.</li>
+    <li><b>Quiet round.</b> A whole round in which every player only turned a piece and nobody made a circle. If your turn completes one, and you could have added or removed a piece instead, the game ends and you cannot win. The highest score among the other players wins. If turning was your only move, play goes on. A turn lost to the timer counts as turning a piece, except while the board is empty.</li>
   </ol>
 </details>
 
@@ -361,7 +361,7 @@ function createGame(cpu, timer){
   const rows = ROWS_IN_PLAY[cpu.length];
   return {rows, timer, corners: cornersOf(rows), board: Array(rows*3).fill(null),
     players: cpu.map((c, i) => ({...SEATS[i], cpu:c, score:0, removes:REMOVES, hand:[2,2,2,2], done:[false,false,false,false]})),
-    turn: Math.floor(Math.random()*cpu.length), die:0, over:null, nextId:1, quiet:0};
+    turn: Math.floor(Math.random()*cpu.length), die:0, over:null, nextId:1, quiet:[]};
 }
 // every interior corner, with the four squares round it and the corner each must face
 function cornersOf(rows){
@@ -370,7 +370,7 @@ function cornersOf(rows){
     out.push({R, C, around: [[R-1,C-1,2], [R-1,C,3], [R,C-1,1], [R,C,0]].map(([r,c,f]) => ({sq:r*3+c, f}))});
   return out;
 }
-const clone = g => ({...g, board: g.board.map(q => q && {...q}), players: g.players.map(p => ({...p, hand:[...p.hand], done:[...p.done]}))});
+const clone = g => ({...g, board: g.board.map(q => q && {...q}), players: g.players.map(p => ({...p, hand:[...p.hand], done:[...p.done]})), quiet:[...g.quiet]});
 function rollDie(g){ g.die = 1 + Math.floor(Math.random()*4); }
 function endTurn(g){ g.turn = (g.turn + 1) % g.players.length; g.die = 0; }
 
@@ -400,6 +400,18 @@ const stuck = g => !g.players.some(p => removeStillPossible(g, p)) && !circleSti
 const patternDead = (g, pat) => !g.players.some(p => p.removes > 0) &&
   !g.corners.some(k => k.around.filter(({sq}) => g.board[sq] && g.board[sq].pat === pat).length + g.players.reduce((a, p) => a + p.hand[pat], 0) >= 3);
 const nobodyCanFinish = g => g.players.every(p => p.done.some((d, pat) => !d && patternDead(g, pat)));
+// the player could add a piece or remove one, so a turn now is a choice, not the only move left
+const couldPlace = (g, p) => p.hand.some(Boolean) && g.board.some(q => !q) || canRemove(g, p);
+// a whole round of turns with no circle, closed by a player who chose to turn: that player cannot win,
+// and the highest score among the others wins; a round closed by a player with no other move goes on
+function quietOver(g){
+  const round = g.quiet.slice(-g.players.length), last = round[round.length - 1];
+  if (round.length < g.players.length || !last.chose) return false;
+  const left = g.players.map((p, i) => i).filter(i => i !== last.seat);
+  const top = Math.max(...left.map(i => g.players[i].score));
+  g.over = {winners: left.filter(i => g.players[i].score === top), why: 'quiet', closer: last.seat};
+  return true;
+}
 function onPoints(g, why){
   const top = Math.max(...g.players.map(p => p.score));
   g.over = {winners: g.players.flatMap((p, i) => p.score === top ? [i] : []), why};
@@ -419,7 +431,7 @@ function legalMoves(g){
 
 function applyMove(g, m){
   const me = g.players[g.turn], res = {by:g.turn, move:m, gone:[]};
-  const hadPieces = g.board.some(Boolean);
+  const hadPieces = g.board.some(Boolean), chose = couldPlace(g, me);
   if (m.type === 'add'){
     me.hand[m.pat]--;
     g.board[m.sq] = {id:g.nextId++, owner:g.turn, pat:m.pat, face:(PRINTED_FACE + g.die) % 4};
@@ -446,11 +458,11 @@ function applyMove(g, m){
     }
   }
   if (hadPieces && !g.board.some(Boolean)){ res.emptied = true; me.score -= PENALTY; }
-  g.quiet = m.type === 'turn' && !res.circle ? g.quiet + 1 : 0;     // a round of turns that made no circle
+  if (m.type === 'turn' && !res.circle) g.quiet.push({seat:g.turn, chose}); else g.quiet = [];
   if (me.done.every(Boolean)) g.over = {winners:[g.turn], why:'four'};
   else if (stuck(g)) onPoints(g, 'stuck');
   else if (nobodyCanFinish(g)) onPoints(g, 'dead');
-  else if (g.quiet >= g.players.length) g.over = {winners: [], why: 'quiet'};     // nobody wins, so nobody gains by forcing it
+  else quietOver(g);
   return res;
 }
 
@@ -716,7 +728,7 @@ function finish(){
     four: `${names[0]} has a circle in all four patterns and wins.`,
     stuck: `No circle can be made any more. ${onPts}`,
     dead: `Nobody can complete all four patterns any more: a pattern each player still needs can never make a circle again. ${onPts}`,
-    quiet: `A whole round passed with only turns and no circle, so the game ends with no winner.`,
+    quiet: `A whole round passed with only pieces turned and no circle. ${G.players[G.over.closer].name} ended the game by turning a piece when they could have added or removed one, so they cannot win. ${onPts}`,
   }[G.over.why];
   note(text);
   render();
@@ -740,8 +752,10 @@ function timeUp(){
   phase = 'wait'; sel = {};
   timerEnds = 0; runRing(0);
   note(`Time ran out: ${cur().name}'s turn passes.`);
-  G.quiet++;
-  if (G.quiet >= G.players.length){ G.over = {winners: [], why: 'quiet'}; phase = 'over'; return finish(); }
+  if (G.board.some(Boolean)){              // a turn lost to the timer counts as a turn, except on an empty board
+    G.quiet.push({seat:G.turn, chose: couldPlace(G, cur())});
+    if (quietOver(G)){ phase = 'over'; return finish(); }
+  }
   render();
   later(() => { endTurn(G); startTurn(); }, 900);
 }
