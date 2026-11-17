@@ -728,9 +728,9 @@ function finish(){
     four: `${names[0]} has a circle in all four patterns and wins.`,
     stuck: `No circle can be made any more. ${onPts}`,
     dead: `Nobody can complete all four patterns any more: a pattern each player still needs can never make a circle again. ${onPts}`,
-    quiet: `A whole round passed with only pieces turned and no circle. ${G.players[G.over.closer].name} ended the game by turning a piece when they could have added or removed one, so they cannot win. ${onPts}`,
+    quiet: () => `A whole round passed with only pieces turned and no circle. ${G.players[G.over.closer].name} ended the game by turning a piece when they could have added or removed one, so they cannot win. ${onPts}`,
   }[G.over.why];
-  note(text);
+  note(typeof text === 'function' ? text() : text);
   render();
 }
 function runRing(ms){             // the ring drains over the time left; a guest is sent what the host's clock shows
