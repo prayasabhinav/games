@@ -539,32 +539,32 @@ function applyMove(g, m){
   return res;
 }
 
-// A computer seat (2027): it weighs each move by what the move gains it now, less what the next player could
-// then gain, plus most of what it could gain itself on its next turn, each averaged over the four faces of the die. Anyone may finish a circle with anyone's pieces,
-// so a corner set up and left open is a gift to the next player; the 2026 player set such corners up and
-// never looked at the reply.
-// How far the board has come toward circles: for every corner and pattern that could still make one (three
-// of its four squares hold that pattern, or are empty while someone still holds it), the square of how many
-// pieces of that pattern already face in.
-function promise(g){
-  let n = 0;
+// A computer seat (2027). It values a position by everything that helps win: its points, the patterns it has
+// circled (the fourth wins), and corners lined up in patterns it still needs, less the same for the strongest other
+// player. A corner can be finished by anyone, so one lined up in a pattern both still need is worth nothing to
+// either. Each move is weighed by the position it leaves, by what the next player could then take with a circle,
+// and by what it could take itself on its next turn, each averaged over the four faces of the die.
+// Settings chosen with simulations/ai-2027-vs-2026.js; trials in simulations/ai-2027-trials.md.
+const WIN = 100000;
+const HELD = [0, 60, 150, 300];     // worth of having circled one, two or three of the four patterns
+const POINTS = 1;                   // worth of each point scored
+const BUILD = 4;                    // worth of each corner, by the square of the pieces of a needed pattern facing it
+const THREAT = 0.3, NEXT_TURN = 0.8;
+function standing(g, seat){
+  const p = g.players[seat], held = p.done.filter(Boolean).length;
+  if (held === 4) return WIN;
+  let v = POINTS * p.score + HELD[held];
   for (const k of g.corners) for (let pat = 0; pat < 4; pat++){
-    const held = g.players.some(p => p.hand[pat] > 0);
-    const open = k.around.filter(({sq}) => g.board[sq] ? g.board[sq].pat === pat : held).length;
-    if (open >= 3) n += facingIn(g, k, pat).length ** 2;
+    if (p.done[pat]) continue;
+    const inHand = g.players.some(q => q.hand[pat] > 0);
+    const open = k.around.filter(({sq}) => g.board[sq] ? g.board[sq].pat === pat : inHand).length;
+    if (open >= 3) v += BUILD * facingIn(g, k, pat).length ** 2;
   }
-  return n;
+  return v;
 }
-const WIN = 100000, NEW_PATTERN = 100, BUILD = 2;   // BUILD: how much lining pieces up toward a corner counts
-// what move m, made on g, is worth to the player who made it, from what it does at once
-function worth(g, s, res, m){
-  const seat = g.turn;
-  if (s.over) return s.over.winners.includes(seat) ? WIN : s.over.why === 'quiet' ? -WIN : 0;
-  let v = 0;
-  if (res.circle) v += res.circle.points + (g.players[seat].done[res.circle.pat] ? 0 : NEW_PATTERN);
-  if (res.emptied) v -= PENALTY;
-  if (!res.circle && !res.cleared) v += BUILD * (promise(s) - promise(g));
-  return v + (m.type === 'add' ? 0.2 : 0);
+function value(g, seat){
+  if (g.over) return g.over.winners.includes(seat) ? WIN : -WIN;
+  return standing(g, seat) - Math.max(...g.players.map((p, i) => i === seat ? -Infinity : standing(g, i)));
 }
 // would this add or turn leave a piece facing a corner where two others of its pattern already face in?
 function closes(t, m){
@@ -573,37 +573,35 @@ function closes(t, m){
   const k = t.corners.find(c => c.R === R && c.C === C);
   return k && facingIn(t, k, pat).filter(sq => sq !== m.sq).length >= 2;
 }
-// the best a player can do from s with a circle, averaged over the four faces of their die: only a move that
-// closes a circle is weighed, since any other gains them little at once
-function chance(s, seat){
-  const t = clone(s);
-  t.turn = seat;
+// how much judge's value changes, averaged over the four faces of the die, if mover plays next and closes the
+// circle that suits mover best (or none, when no circle would help mover)
+function swing(s, mover, judge){
+  const t = clone(s), base = value(s, judge), baseMover = value(s, mover);
+  t.turn = mover;
   let sum = 0;
   for (let die = 1; die <= 4; die++){
     t.die = die;
-    let best = 0;
+    let bestMover = baseMover, after = base;
     for (const m of legalMoves(t)) if (m.type !== 'remove' && closes(t, m)){
-      const u = clone(t), res = applyMove(u, m);
-      const v = u.over ? (u.over.winners.includes(seat) ? WIN : -WIN)
-        : res.circle ? res.circle.points + (t.players[seat].done[res.circle.pat] ? 0 : NEW_PATTERN) - (res.emptied ? PENALTY : 0) : 0;
-      if (v > best) best = v;
+      const u = clone(t);
+      applyMove(u, m);
+      const vm = value(u, mover);
+      if (vm > bestMover){ bestMover = vm; after = value(u, judge); }
     }
-    sum += best;
+    sum += after - base;
   }
   return sum / 4;
 }
-// a move is worth what it gains now, less what the next player could then take, plus what this player could take
-// on its own next turn if the board were left as it is. Counting the next player's chance in full (THREAT = 1) made two
-// computers refuse to set anything up: games between them ran to hundreds of turns. The values here were chosen on
-// 17 November 2026 with simulations/ai-2027-vs-2026.js; the figures are in simulations/ai-2027-trials.md.
-const THREAT = 0.3, NEXT_TURN = 0.8;
 function aiChoose(g){
+  const me = g.turn, next = (me + 1) % g.players.length;
   let best = null, bestValue = -Infinity;
   for (const m of legalMoves(g)){
-    const s = clone(g), v = worth(g, s, applyMove(s, m), m);
-    const next = (g.turn + 1) % g.players.length;
-    const value = (s.over ? v : v - THREAT * chance(s, next) + NEXT_TURN * chance(s, g.turn)) + Math.random() * 0.01;
-    if (value > bestValue){ best = m; bestValue = value; }
+    const s = clone(g);
+    applyMove(s, m);
+    let v = value(s, me);
+    if (!s.over) v += THREAT * swing(s, next, me) + NEXT_TURN * swing(s, me, me);
+    v += Math.random() * 0.01;
+    if (v > bestValue){ best = m; bestValue = v; }
   }
   return best;
 }
@@ -991,7 +989,7 @@ function drawKey(){
 // One entry per game, written after every turn, so a game left unfinished is kept too. A guest keeps a copy of the
 // host's record. Nothing is sent anywhere: the record leaves the browser only when someone downloads it.
 // the computer is named by its settings in ai.js, so every game says which computer played it
-const RECORDS = '3-quarters-2027-games', COMPUTER = `threat ${THREAT}, next turn ${NEXT_TURN}, build ${BUILD}, new pattern ${NEW_PATTERN}`;
+const RECORDS = '3-quarters-2027-games', COMPUTER = `whole position; threat ${THREAT}, next turn ${NEXT_TURN}, build ${BUILD}, patterns ${HELD.join('/')}`;
 function records(){ try { return JSON.parse(localStorage.getItem(RECORDS)) || []; } catch { return []; } }
 function keep(r){
   try { localStorage.setItem(RECORDS, JSON.stringify([...records().filter(x => x.id !== r.id), r])); } catch {}
